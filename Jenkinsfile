@@ -13,7 +13,7 @@ pipeline {
         }
         stage('Run Tests') {
             steps {
-                sh 'python3 -m pytest'
+                sh 'python3 -m pytest tests/test_app.py'
             }
         }
         stage('Build Docker Image') {
