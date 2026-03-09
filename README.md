@@ -15,48 +15,66 @@ A Flask web app for ACEest Fitness & Gym, showcasing DevOps best practices: vers
 ## Local Setup Instructions
 
 1. Clone the repository:
+
+   # ACEest Fitness & Gym
+
+   This is a modular Flask web application for ACEest Fitness & Gym, demonstrating DevOps best practices:
+   - Version control with Git
+   - Automated testing with Pytest
+   - Docker containerization
+   - CI/CD pipelines using GitHub Actions and Jenkins
+
+   ## Project Structure
+
+   - `app.py`: Main Flask application
+   - `program_data.py`: Supporting module for app logic
+   - `requirements.txt`: Python dependencies
+   - `tests/`: Unit tests (Pytest)
+   - `Dockerfile`: Containerization instructions
+   - `.github/workflows/main.yml`: GitHub Actions CI/CD pipeline
+   - `Jenkinsfile`: Jenkins pipeline definition
+   - `templates/`: HTML templates for Flask
+
+   ## Local Setup
+
+   1. **Clone the repository:**
+      ```sh
+      git clone <repo-url>
+      cd ACEest-Fitness-Gym
+      ```
+   2. **Install dependencies:**
+      ```sh
+      pip install -r requirements.txt
+      ```
+   3. **Run the app locally:**
+      ```sh
+      python app.py
+      ```
+   4. **Run with Docker:**
+      ```sh
+      docker build -t aceest-fitness-gym .
+      docker run -p 5000:5000 aceest-fitness-gym
+      ```
+
+   ## Running Tests
+
+   To run tests manually:
    ```sh
-   git clone <repo-url>
-   cd ACEest-Fitness-Gym
-   ```
-2. Install dependencies:
-   ```sh
-   pip install -r requirements.txt
-   ```
-3. Run the app:
-   ```sh
-   python app.py
-   ```
-   Or, for Docker:
-   ```sh
-   docker build -t aceest-fitness-gym .
-   docker run -p 5000:5000 aceest-fitness-gym
+   pytest
+   # or
+   python3 -m pytest
    ```
 
-## How to Run Tests Manually
+   ## CI/CD Overview
 
-Run tests with:
-```sh
-pytest
-# or
-python3 -m pytest
-```
+   - **GitHub Actions:**
+     - Triggers on push and pull requests
+     - Installs dependencies, lints, runs tests, and builds Docker image
+   - **Jenkins:**
+     - Uses the Jenkinsfile for pipeline definition
+     - Stages: install dependencies, lint, test, build Docker image
+     - Set up a Jenkins Pipeline job and point it to this repository
 
-## Overview of Jenkins Integration
+   ## Versioning
 
-- Jenkins is used for automated CI/CD outside GitHub Actions.
-- The Jenkinsfile defines the pipeline: checkout, install dependencies, run tests, build Docker image.
-- Jenkins pulls the latest code from GitHub, runs the pipeline, and reports build/test status.
-- To use Jenkins:
-  1. Set up Jenkins server (locally or cloud).
-  2. Create a Pipeline job and point it to this repository.
-  3. Jenkins will automatically use the Jenkinsfile for builds.
-
-## CI/CD
-
-- GitHub Actions: Automated build, test, and Docker image creation on push/pull request.
-- Jenkins: Pulls latest code, builds, and runs tests in a controlled environment.
-
-## Versions
-
-The app evolves from v1.0 to v3.2.4. Each version's code will be adapted to Flask and placed in `app.py`.
+   The app evolves from v1.0 to v3.2.4. Each version's code is placed in `app.py` as the project progresses.
