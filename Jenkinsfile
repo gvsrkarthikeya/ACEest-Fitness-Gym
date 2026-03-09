@@ -1,11 +1,12 @@
 pipeline {
     agent any
     stages {
-        // stage('Checkout') {
-        //     steps {
-        //         git 'https://github.com/gvsrkarthikeya/ACEest-Fitness-Gym.git'
-        //     }
-        // }
+        stage('Check Docker') {
+            steps {
+                sh 'docker --version || echo "Docker not found"'
+                sh 'echo $PATH'
+            }
+        }
         stage('Check Files') {
             steps {
                 sh 'ls -l'
