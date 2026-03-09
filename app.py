@@ -3,6 +3,7 @@ from program_data import programs
 
 app = Flask(__name__)
 
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     selected = list(programs.keys())[0]
@@ -17,6 +18,7 @@ def home():
         diet=data["diet"],
         color=data["color"]
     )
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
