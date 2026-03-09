@@ -8,10 +8,12 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+
 # Copy app files
 COPY app.py ./
 COPY program_data.py ./
 COPY templates ./templates
+COPY tests ./tests
 
 # Expose port
 EXPOSE 5000
