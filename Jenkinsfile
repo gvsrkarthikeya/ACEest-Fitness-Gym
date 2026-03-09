@@ -1,24 +1,24 @@
 pipeline {
     agent any
     stages {
-        stage('Checkout') {
+        stage('Install dependencies') {
             steps {
-                git 'https://github.com/gvsrkarthikeya/ACEest-Fitness-Gym.git'
+                sh 'python3 -m pip install -r requirements.txt'
             }
         }
-        stage('Install Dependencies') {
+        stage('Lint') {
             steps {
-                sh 'pip install -r requirements.txt'
+                sh 'python3 -m pip install flake8 && python3 -m flake8 app.py program_data.py'
             }
         }
-        stage('Run Tests') {
+        stage('Test') {
             steps {
                 sh 'python3 -m pytest'
             }
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t aceest-fitness-gym .'
+                sh 'docker build -t aceest-fitness-gym:latest .'
             }
         }
     }
