@@ -1,11 +1,11 @@
 pipeline {
     agent any
     stages {
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/gvsrkarthikeya/ACEest-Fitness-Gym.git'
-            }
-        }
+        // stage('Checkout') {
+        //     steps {
+        //         git 'https://github.com/gvsrkarthikeya/ACEest-Fitness-Gym.git'
+        //     }
+        // }
         stage('Check Files') {
             steps {
                 sh 'ls -l'
