@@ -8,7 +8,7 @@ pipeline {
         }
         stage('Lint') {
             steps {
-                sh 'python3 -m pip install flake8 && flake8 app.py program_data.py'
+                sh 'python3 -m pip install flake8 && python3 -m flake8 app.py program_data.py'
             }
         }
         stage('Test') {
