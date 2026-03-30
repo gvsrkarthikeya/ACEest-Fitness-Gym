@@ -1,19 +1,21 @@
+
 programs = {
     "Fat Loss (FL)": {
         "workout": (
-            "Mon: 5x5 Back Squat + AMRAP<br>"
+            "Mon: Back Squat 5x5 + Core<br>"
             "Tue: EMOM 20min Assault Bike<br>"
             "Wed: Bench Press + 21-15-9<br>"
-            "Thu: 10RFT Deadlifts/Box Jumps<br>"
-            "Fri: 30min Active Recovery"
+            "Thu: Deadlift + Box Jumps<br>"
+            "Fri: Zone 2 Cardio 30min"
         ),
         "diet": (
-            "B: 3 Egg Whites + Oats Idli<br>"
-            "L: Grilled Chicken + Brown Rice<br>"
-            "D: Fish Curry + Millet Roti<br>"
-            "Target: 2,000 kcal"
+            "Breakfast: Egg Whites + Oats<br>"
+            "Lunch: Grilled Chicken + Brown Rice<br>"
+            "Dinner: Fish Curry + Millet Roti<br>"
+            "Target: ~2000 kcal"
         ),
-        "color": "#e74c3c"
+        "color": "#e74c3c",
+        "calorie_factor": 22
     },
     "Muscle Gain (MG)": {
         "workout": (
@@ -25,22 +27,28 @@ programs = {
             "Sat: Barbell Rows 4x10"
         ),
         "diet": (
-            "B: 4 Eggs + PB Oats<br>"
-            "L: Chicken Biryani (250g Chicken)<br>"
-            "D: Mutton Curry + Jeera Rice<br>"
-            "Target: 3,200 kcal"
+            "Breakfast: Eggs + Peanut Butter Oats<br>"
+            "Lunch: Chicken Biryani<br>"
+            "Dinner: Mutton Curry + Rice<br>"
+            "Target: ~3200 kcal"
         ),
-        "color": "#2ecc71"
+        "color": "#2ecc71",
+        "calorie_factor": 35
     },
     "Beginner (BG)": {
         "workout": (
-            "Circuit Training: Air Squats, Ring Rows, Push-ups.<br>"
-            "Focus: Technique Mastery & Form (90% Threshold)"
+            "Full Body Circuit:<br>"
+            "- Air Squats<br>"
+            "- Ring Rows<br>"
+            "- Push-ups<br>"
+            "Focus: Technique & Consistency"
         ),
         "diet": (
-            "Balanced Tamil Meals: Idli-Sambar, Rice-Dal, Chapati.<br>"
-            "Protein: 120g/day"
+            "Balanced Tamil Meals<br>"
+            "Idli / Dosa / Rice + Dal<br>"
+            "Protein Target: 120g/day"
         ),
-        "color": "#3498db"
+        "color": "#3498db",
+        "calorie_factor": 26
     }
 }

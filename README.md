@@ -1,16 +1,19 @@
 # ACEest Fitness & Gym
 
-A Flask web app for ACEest Fitness & Gym, showcasing DevOps best practices: version control, automated testing, Docker containerization, and CI/CD pipelines with GitHub Actions and Jenkins.
+A Flask web app for ACEest Fitness & Gym, now supporting personalized client profiles and calorie estimation. Showcases DevOps best practices: version control, automated testing, Docker containerization, and CI/CD pipelines with GitHub Actions and Jenkins.
 
 ## Project Structure
 
-- `app.py`: Main application file (will be updated for each version)
-- `requirements.txt`: Python dependencies
-- `tests/`: Unit tests
-- `.gitignore`: Ignore unnecessary files
-- `Dockerfile`: Containerization
-- `.github/workflows/main.yml`: CI/CD pipeline
-- `Jenkinsfile`: Jenkins pipeline definition
+
+   - `app.py`: Main application file (Flask web app)
+   - `program_data.py`: Program logic and calorie factors
+   - `requirements.txt`: Python dependencies
+   - `tests/`: Unit tests
+   - `.gitignore`: Ignore unnecessary files
+   - `Dockerfile`: Containerization
+   - `.github/workflows/main.yml`: CI/CD pipeline
+   - `Jenkinsfile`: Jenkins pipeline definition
+   - `templates/`: HTML templates for Flask
 
 ## Local Setup Instructions
 
@@ -35,35 +38,44 @@ A Flask web app for ACEest Fitness & Gym, showcasing DevOps best practices: vers
    - `Jenkinsfile`: Jenkins pipeline definition
    - `templates/`: HTML templates for Flask
 
-   ## Local Setup
 
-   1. **Clone the repository:**
-      ```sh
-      git clone <repo-url>
-      cd ACEest-Fitness-Gym
-      ```
-   2. **Install dependencies:**
-      ```sh
-      pip install -r requirements.txt
-      ```
-   3. **Run the app locally:**
-      ```sh
-      python app.py
-      ```
-   4. **Run with Docker:**
-      ```sh
-      docker build -t aceest-fitness-gym .
-      docker run -p 5000:5000 aceest-fitness-gym
-      ```
+## Local Setup
 
-   ## Running Tests
-
-   To run tests manually:
+1. **Clone the repository:**
    ```sh
-   pytest
-   # or
-   python3 -m pytest
+   git clone <repo-url>
+   cd ACEest-Fitness-Gym
    ```
+2. **Install dependencies:**
+   ```sh
+   pip install -r requirements.txt
+   ```
+3. **Run the app locally:**
+   ```sh
+   python app.py
+   ```
+4. **Run with Docker:**
+   ```sh
+   docker build -t aceest-fitness-gym .
+   docker run -p 5000:5000 aceest-fitness-gym
+   ```
+
+
+## Features (v1.1)
+
+- Personalized client profile: Name, Age, Weight, Weekly Adherence
+- Program selection: Fat Loss, Muscle Gain, Beginner
+- Automatic calorie estimation based on weight and program
+- Weekly workout and nutrition plans
+
+## Running Tests
+
+To run tests manually:
+```sh
+pytest
+# or
+python3 -m pytest
+```
 
    ## CI/CD Overview
 
