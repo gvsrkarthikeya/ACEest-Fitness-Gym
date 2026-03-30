@@ -68,13 +68,26 @@ A Flask web app for ACEest Fitness & Gym, now supporting personalized client pro
 - Automatic calorie estimation based on weight and program
 - Weekly workout and nutrition plans
 
-## Running Tests
+
+## Running Tests & Coverage
 
 To run tests manually:
 ```sh
 pytest
 # or
 python3 -m pytest
+```
+
+To check test coverage:
+```sh
+pytest --cov=.
+# or
+python3 -m pytest --cov=.
+```
+For an HTML coverage report:
+```sh
+pytest --cov=. --cov-report=html
+# Open htmlcov/index.html in your browser
 ```
 
    ## CI/CD Overview
