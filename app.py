@@ -3,6 +3,7 @@ from program_data import programs
 
 app = Flask(__name__)
 
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     selected = list(programs.keys())[0]
