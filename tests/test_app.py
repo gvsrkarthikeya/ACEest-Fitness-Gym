@@ -152,6 +152,28 @@ def test_progress_chart(client):
     assert response.headers['Content-Type'] == 'image/png'
     assert len(response.data) > 100  # Should return image bytes
 
+def test_progress_chart_content(client):
+    # Save a client and progress to ensure chart is generated
+    client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'ChartTest',
+        'age': '23',
+        'weight': '60',
+        'adherence': '80',
+        'notes': 'Chart test',
+        'save': 'Save Client'
+    })
+    client.post('/save_progress', data={
+        'name': 'ChartTest',
+        'adherence': '80'
+    })
+    response = client.get('/progress_chart.png')
+    assert response.status_code == 200
+    assert response.headers['Content-Type'] == 'image/png'
+    assert len(response.data) > 100
+    # Optionally, check PNG signature
+    assert response.data[:8] == b'\x89PNG\r\n\x1a\n'
+
 def test_reset_form(client):
     # Fill and reset
     response = client.post('/', data={
@@ -307,3 +329,75 @@ def test_save_progress_get_not_allowed(client):
     response = client.get('/save_progress', follow_redirects=True)
     # Should redirect or error (405)
     assert response.status_code in (405, 302)
+
+
+# Additional test cases for new features/UI
+def test_load_client_by_name(client):
+    # Save two clients
+    client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'LoadMe',
+        'age': '21',
+        'weight': '55',
+        'adherence': '80',
+        'notes': 'To load',
+        'save': 'Save Client'
+    })
+    client.post('/', data={
+        'profile': 'Fat Loss (FL)',
+        'name': 'Other',
+        'age': '22',
+        'weight': '60',
+        'adherence': '70',
+        'notes': 'Other',
+        'save': 'Save Client'
+    })
+    # Load by name (GET param)
+    response = client.get('/?load_name=LoadMe')
+    assert b'LoadMe' in response.data
+    assert b'To load' in response.data
+    assert b'Beginner (BG)' in response.data
+
+def test_summary_profile_rendering(client):
+    # Save a client and check for summary/profile area
+    client.post('/', data={
+        'profile': 'Muscle Gain (MG)',
+        'name': 'SummaryUser',
+        'age': '27',
+        'weight': '75',
+        'adherence': '88',
+        'notes': 'Summary test',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    # Now load by name to trigger summary
+    response = client.get('/?load_name=SummaryUser')
+    # The summary/profile area should be present
+    assert b'Client Profile' in response.data
+    assert b'SummaryUser' in response.data
+    assert b'Summary test' in response.data
+
+def test_flash_message_invalid_input(client):
+    # Submit with missing name
+    response = client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': '',
+        'age': '20',
+        'weight': '50',
+        'adherence': '80',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    # Should flash a message about missing name
+    assert b'Please fill client name and program.' in response.data
+
+def test_flash_message_invalid_age(client):
+    # Submit with invalid age (should still save, as app does not validate age type)
+    response = client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'InvalidAge',
+        'age': 'abc',
+        'weight': '50',
+        'adherence': '80',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    # Should still show success message (no strict validation in app)
+    assert b'Client InvalidAge saved successfully.' in response.data
