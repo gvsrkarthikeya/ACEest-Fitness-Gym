@@ -8,15 +8,22 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
 
 ## Features (v2.0.1)
 
-- Persistent client and progress management using SQLite database
-- Save, load, and update client profiles (name, age, weight, program, notes)
-- Track and save weekly adherence progress for each client
-- View all clients and their latest adherence in a table
-- Export all client data as CSV
-- Visualize client adherence with a progress chart (from DB)
-- Add and display coach notes for each client
-- Reset form to clear input fields
-- All features fully tested and documented
+* Persistent client and progress management using SQLite database
+* Save, load, and update client profiles (name, age, weight, program, notes)
+* Load client by name and view full client summary/profile
+* Track and save weekly adherence progress for each client
+* View all clients and their latest adherence in a table
+* Export all client data as CSV
+* Visualize client adherence with a progress chart (from DB)
+* Add and display coach notes for each client
+* Reset form to clear input fields
+* Modern web-based UI (Flask, HTML/CSS)
+* All features fully tested and documented
+
+## Recent Updates (v2.1.2)
+
+- Added `/progress_chart.png` route to dynamically generate and serve the progress chart from the SQLite database using matplotlib.
+- Ensured all client and progress data is stored and retrieved using SQLite (persistent DB).
 
 ## Project Structure
 

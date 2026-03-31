@@ -73,7 +73,38 @@ def home():
     adherence = ''
     notes = ''
     calories = None
-    if request.method == 'POST':
+    summary = None
+    load_name = request.args.get('load_name', '').strip()
+    if load_name:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT * FROM clients WHERE name=?', (load_name,))
+        row = cur.fetchone()
+        if row:
+            _, name, age, weight, selected, calories, notes = row
+            cur.execute('SELECT MAX(adherence) FROM'
+                        ' progress WHERE client_name=?', (name,))
+            adherence_row = cur.fetchone()
+            adherence = (
+                adherence_row[0] if adherence_row and
+                adherence_row[0] is not None else ''
+                )
+            summary = f"""
+CLIENT PROFILE
+--------------
+Name     : {name}
+Age      : {age}
+Weight   : {weight} kg
+Program  : {selected}
+Calories : {calories} kcal/day
+Adherence: {adherence}
+Notes    : {notes}
+"""
+            # Save client if requested
+        else:
+            flash('Client not found.', 'warning')
+        conn.close()
+    elif request.method == 'POST':
         selected = request.form.get('profile', selected)
         name = request.form.get('name', '')
         age = request.form.get('age', '')
@@ -81,7 +112,6 @@ def home():
         adherence = request.form.get('adherence', '')
         notes = request.form.get('notes', '')
         calories = calculate_calories(weight, selected)
-        # Save client if requested
         if 'save' in request.form:
             if name and selected:
                 try:
@@ -108,10 +138,42 @@ def home():
                     "Please fill client name and program.",
                     "warning"
                 )
-        # Reset form
+    if request.method == 'POST':
+        selected = request.form.get('profile', selected)
+        name = request.form.get('name', '')
+        age = request.form.get('age', '')
+        weight = request.form.get('weight', '')
+        adherence = request.form.get('adherence', '')
+        notes = request.form.get('notes', '')
+        calories = calculate_calories(weight, selected)
+        if 'save' in request.form:
+            if name and selected:
+                try:
+                    conn = get_db()
+                    cur = conn.cursor()
+                    cur.execute('''
+                        INSERT OR REPLACE INTO clients
+                        (name, age, weight, program, calories, notes)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ''', (name, age, weight, selected, calories, notes))
+                    conn.commit()
+                    conn.close()
+                    flash(
+                        f"Client {name} saved successfully.",
+                        "success"
+                    )
+                except Exception as e:
+                    flash(
+                        f"DB Error: {e}",
+                        "danger"
+                    )
+            else:
+                flash(
+                    "Please fill client name and program.",
+                    "warning"
+                )
         if 'reset' in request.form:
             return redirect(url_for('home'))
-    # Load all clients for display
     conn = get_db()
     cur = conn.cursor()
     cur.execute('''
@@ -140,33 +202,8 @@ def home():
         adherence=adherence,
         notes=notes,
         calories=calories,
-        clients=clients
-    )
-
-
-@app.route('/export')
-def export_csv():
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute(
-        'SELECT name, age, weight, program, calories, notes FROM clients'
-        )
-    clients = cur.fetchall()
-    conn.close()
-    if not clients:
-        flash("No clients to export.", "warning")
-        return redirect(url_for('home'))
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Name", "Age", "Weight", "Program", "Calories", "Notes"])
-    for c in clients:
-        writer.writerow([c[0], c[1], c[2], c[3], c[4], c[5]])
-    output.seek(0)
-    return send_file(
-        io.BytesIO(output.getvalue().encode()),
-        mimetype='text/csv',
-        as_attachment=True,
-        download_name='clients.csv'
+        clients=clients,
+        summary=summary
     )
 
 
@@ -174,38 +211,32 @@ def export_csv():
 def progress_chart():
     conn = get_db()
     cur = conn.cursor()
-    cur.execute(
-        'SELECT client_name, MAX(adherence) FROM progress GROUP BY client_name'
-    )
-    rows = cur.fetchall()
+    cur.execute('SELECT week, adherence FROM progress ORDER BY week')
+    data = cur.fetchall()
     conn.close()
-    fig, ax = plt.subplots(figsize=(4, 2))
-    if rows:
-        adherence = [float(r[1]) if r[1] else 0 for r in rows]
-        names = [r[0] for r in rows]
-        ax.bar(
-            names, adherence, color="#d4af37"
-        )
-        ax.set_ylabel("Adherence %")
-        ax.set_title("Client Progress")
-    else:
-        ax.text(0.5, 0.5, 'No Data', ha='center', va='center')
-    buf = io.BytesIO()
+    weeks = [row['week'] for row in data]
+    adherence = [row['adherence'] for row in data]
+    fig, ax = plt.subplots(figsize=(6, 3))
+    ax.plot(weeks, adherence, marker='o', color='#d4af37')
+    ax.set_title('Weekly Adherence')
+    ax.set_xlabel('Week')
+    ax.set_ylabel('Adherence (%)')
+    ax.set_ylim(0, 100)
+    plt.xticks(rotation=45)
     plt.tight_layout()
-    fig.savefig(buf, format='png')
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
     plt.close(fig)
-    buf.seek(0)
-    return send_file(buf, mimetype='image/png')
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
 
-
-# Endpoint to save progress
 
 @app.route('/save_progress', methods=['POST'])
 def save_progress():
     name = request.form.get('name', '')
     adherence = request.form.get('adherence', '')
-    if not name:
-        flash('Client name required to save progress.', 'warning')
+    if not name or not adherence:
+        flash('Name and adherence required to save progress.', 'warning')
         return redirect(url_for('home'))
     week = datetime.now().strftime('Week %U - %Y')
     try:
@@ -217,16 +248,32 @@ def save_progress():
         ''', (name, week, adherence))
         conn.commit()
         conn.close()
-        flash(
-            'Weekly progress logged.',
-            'success'
-        )
+        flash('Weekly progress logged.', 'success')
     except Exception as e:
-        flash(
-            f'Error saving progress: {e}',
-            'danger'
-        )
+        flash(f'Error saving progress: {e}', 'danger')
     return redirect(url_for('home'))
+
+
+@app.route('/export')
+def export_csv():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM clients')
+    rows = cur.fetchall()
+    if not rows:
+        flash('No clients to export.', 'warning')
+        conn.close()
+        return redirect(url_for('home'))
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(rows[0].keys())
+    for row in rows:
+        writer.writerow([row[k] for k in row.keys()])
+    conn.close()
+    output.seek(0)
+    return send_file(
+        io.BytesIO(output.read().encode()), mimetype='text/csv',
+        as_attachment=True, download_name='clients.csv')
 
 
 if __name__ == '__main__':
