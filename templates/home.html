@@ -40,8 +40,23 @@
                 <label for="adherence">Weekly Adherence (%):</label>
                 <input type="number" name="adherence" id="adherence" min="0" max="100" value="{{ adherence }}">
             </div>
-            <button type="submit">Submit</button>
+            <div class="select">
+                <label for="notes">Coach Notes:</label>
+                <input type="text" name="notes" id="notes" value="{{ notes }}">
+            </div>
+            <button type="submit" name="save">Save Client</button>
+            <a href="/export"><button type="button">Export CSV</button></a>
+            <button type="submit" name="reset">Reset</button>
         </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul style="color: #d4af37;">
+            {% for category, message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
         <div class="metrics">
             CAPACITY: 150 Users<br>
             AREA: 10,000 sq ft<br>
@@ -49,6 +64,23 @@
             {% if calories %}
                 <strong>Estimated Calories:</strong> {{ calories }} kcal<br>
             {% endif %}
+        </div>
+        <div class="metrics">
+            <strong>Client List:</strong>
+            <table style="width:100%; background:#222; color:#fff; border-radius:5px;">
+                <tr>
+                    <th>Name</th><th>Age</th><th>Weight</th><th>Program</th><th>Adherence</th><th>Notes</th>
+                </tr>
+                {% for c in clients %}
+                <tr>
+                    <td>{{ c[0] }}</td><td>{{ c[1] }}</td><td>{{ c[2] }}</td><td>{{ c[3] }}</td><td>{{ c[4] }}</td><td>{{ c[5] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div class="metrics">
+            <strong>Progress Chart:</strong><br>
+            <img src="/progress_chart.png" alt="Progress Chart" style="background:#fff; border-radius:5px;">
         </div>
         <div class="workout">
             <strong>Weekly Workout Chart:</strong><br>

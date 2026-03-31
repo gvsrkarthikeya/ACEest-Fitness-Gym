@@ -1,6 +1,27 @@
+
 # ACEest Fitness & Gym
 
-A Flask web app for ACEest Fitness & Gym, now supporting personalized client profiles and calorie estimation. Showcases DevOps best practices: version control, automated testing, Docker containerization, and CI/CD pipelines with GitHub Actions and Jenkins.
+## Version 1.1.2
+
+### New in 1.1.2
+- Save and manage multiple client profiles
+- Export all client data as CSV
+- Visualize client adherence with a progress chart
+- Add and display coach notes for each client
+- Reset form to clear input fields
+- All features fully tested and documented
+
+
+
+A Flask web app for ACEest Fitness & Gym, now supporting:
+- Personalized client profiles
+- Calorie estimation
+- Client list management (save multiple clients)
+- Export client data as CSV
+- Progress chart (adherence %)
+- Coach notes for each client
+
+Showcases DevOps best practices: version control, automated testing, Docker containerization, and CI/CD pipelines with GitHub Actions and Jenkins.
 
 ## Project Structure
 
@@ -50,14 +71,41 @@ A Flask web app for ACEest Fitness & Gym, now supporting personalized client pro
    ```sh
    pip install -r requirements.txt
    ```
+   (Installs Flask, matplotlib, pytest, and more)
+
 3. **Run the app locally:**
    ```sh
    python app.py
    ```
+
 4. **Run with Docker:**
    ```sh
    docker build -t aceest-fitness-gym .
    docker run -p 5000:5000 aceest-fitness-gym
+
+   ## Features (v1.1.2)
+
+   - Add and save multiple client profiles (name, age, weight, program, adherence, notes)
+   - Calorie calculation based on program and weight
+   - View all clients in a table
+   - Export all client data as CSV
+   - Visualize client adherence with a progress chart
+   - Add and display coach notes for each client
+   - Reset form to clear input fields
+
+   ## Testing
+
+   Run all tests with:
+   ```sh
+   pytest
+   ```
+
+   Test coverage includes:
+   - Form input and calorie calculation
+   - Client save and list
+   - CSV export
+   - Progress chart endpoint
+   - Reset and notes features
    ```
 
 

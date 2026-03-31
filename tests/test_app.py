@@ -82,3 +82,72 @@ def test_empty_form(client):
     assert response.status_code == 200
     # Should not crash, should show default program
     assert b'ACEest FUNCTIONAL FITNESS' in response.data
+
+
+def test_save_client_and_list(client):
+    # Save a client
+    response = client.post('/', data={
+        'profile': 'Fat Loss (FL)',
+        'name': 'Client1',
+        'age': '28',
+        'weight': '60',
+        'adherence': '85',
+        'notes': 'Good progress',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    assert b'Client Client1 saved successfully.' in response.data
+    # Check client appears in table
+    assert b'Client1' in response.data
+    assert b'28' in response.data
+    assert b'60' in response.data
+    assert b'85' in response.data
+    assert b'Good progress' in response.data
+
+def test_export_csv(client):
+    # Save a client first
+    client.post('/', data={
+        'profile': 'Muscle Gain (MG)',
+        'name': 'Client2',
+        'age': '30',
+        'weight': '80',
+        'adherence': '90',
+        'notes': 'Strong',
+        'save': 'Save Client'
+    })
+    # Export CSV
+    response = client.get('/export')
+    assert response.status_code == 200
+    assert b'Client2' in response.data
+    assert b'Muscle Gain (MG)' in response.data
+    assert b'Strong' in response.data
+    assert response.headers['Content-Type'].startswith('text/csv')
+
+def test_progress_chart(client):
+    # Save a client to have chart data
+    client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'Client3',
+        'age': '22',
+        'weight': '55',
+        'adherence': '75',
+        'notes': 'Newbie',
+        'save': 'Save Client'
+    })
+    response = client.get('/progress_chart.png')
+    assert response.status_code == 200
+    assert response.headers['Content-Type'] == 'image/png'
+    assert len(response.data) > 100  # Should return image bytes
+
+def test_reset_form(client):
+    # Fill and reset
+    response = client.post('/', data={
+        'profile': 'Fat Loss (FL)',
+        'name': 'Client4',
+        'age': '40',
+        'weight': '70',
+        'adherence': '60',
+        'notes': 'To reset',
+        'reset': 'Reset'
+    }, follow_redirects=True)
+    # Should redirect to home and not show client4 in table
+    assert b'Client4' not in response.data
