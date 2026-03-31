@@ -137,7 +137,7 @@ def test_export_csv(client):
     assert response.headers['Content-Type'].startswith('text/csv')
 
 def test_progress_chart(client):
-    # Save a client to have chart data
+    # Save two clients with progress
     client.post('/', data={
         'profile': 'Beginner (BG)',
         'name': 'Client3',
@@ -147,10 +147,38 @@ def test_progress_chart(client):
         'notes': 'Newbie',
         'save': 'Save Client'
     })
-    response = client.get('/progress_chart.png')
+    client.post('/save_progress', data={
+        'name': 'Client3',
+        'adherence': '75'
+    })
+    client.post('/', data={
+        'profile': 'Fat Loss (FL)',
+        'name': 'Client4',
+        'age': '30',
+        'weight': '60',
+        'adherence': '60',
+        'notes': 'Other',
+        'save': 'Save Client'
+    })
+    client.post('/save_progress', data={
+        'name': 'Client4',
+        'adherence': '60'
+    })
+    # Per-client chart for Client3
+    response = client.get('/progress_chart.png?client=Client3')
     assert response.status_code == 200
     assert response.headers['Content-Type'] == 'image/png'
-    assert len(response.data) > 100  # Should return image bytes
+    assert len(response.data) > 100
+    # Per-client chart for Client4
+    response2 = client.get('/progress_chart.png?client=Client4')
+    assert response2.status_code == 200
+    assert response2.headers['Content-Type'] == 'image/png'
+    assert len(response2.data) > 100
+    # Global chart (all progress)
+    response3 = client.get('/progress_chart.png')
+    assert response3.status_code == 200
+    assert response3.headers['Content-Type'] == 'image/png'
+    assert len(response3.data) > 100
 
 def test_progress_chart_content(client):
     # Save a client and progress to ensure chart is generated
@@ -185,8 +213,14 @@ def test_reset_form(client):
         'notes': 'To reset',
         'reset': 'Reset'
     }, follow_redirects=True)
-    # Should redirect to home and not show client4 in table
-    assert b'Client4' not in response.data
+    # Should redirect to home and form fields should be empty (but client table remains)
+    # Use regex to robustly check for empty value fields
+    import re
+    assert re.search(br'name="name"[^>]*value=""', response.data)
+    assert re.search(br'name="age"[^>]*value=""', response.data)
+    assert re.search(br'name="weight"[^>]*value=""', response.data)
+    assert re.search(br'name="adherence"[^>]*value=""', response.data)
+    assert re.search(br'name="notes"[^>]*value=""', response.data)
 
 def test_duplicate_client_update(client):
     # Save client

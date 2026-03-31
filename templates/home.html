@@ -28,23 +28,23 @@
                 </div>
                 <div class="select">
                     <label for="name">Name:</label>
-                    <input type="text" name="name" id="name" value="{{ name }}">
+                    <input type="text" name="name" id="name" value="{{ name or '' }}">
                 </div>
                 <div class="select">
                     <label for="age">Age:</label>
-                    <input type="number" name="age" id="age" value="{{ age }}">
+                    <input type="number" name="age" id="age" value="{{ age or '' }}">
                 </div>
                 <div class="select">
                     <label for="weight">Weight (kg):</label>
-                    <input type="number" step="0.1" name="weight" id="weight" value="{{ weight }}">
+                    <input type="number" step="0.1" name="weight" id="weight" value="{{ weight or '' }}">
                 </div>
                 <div class="select">
                     <label for="adherence">Weekly Adherence (%):</label>
-                    <input type="number" name="adherence" id="adherence" min="0" max="100" value="{{ adherence }}">
+                    <input type="number" name="adherence" id="adherence" min="0" max="100" value="{{ adherence or '' }}">
                 </div>
                 <div class="select">
                     <label for="notes">Coach Notes:</label>
-                    <input type="text" name="notes" id="notes" value="{{ notes }}">
+                    <input type="text" name="notes" id="notes" value="{{ notes or '' }}">
                 </div>
                 <button type="submit" name="save">Save Client</button>
                 <form method="post" action="/save_progress" style="display:inline;">
@@ -100,7 +100,7 @@
             </div>
             <div class="metrics">
                 <strong>Progress Chart:</strong><br>
-                <img src="/progress_chart.png" alt="Progress Chart" style="background:#fff; border-radius:5px;">
+                <img src="/progress_chart.png?client={{ chart_client }}" alt="Progress Chart" style="background:#fff; border-radius:5px;">
             </div>
             <div class="workout">
                 <strong>Weekly Workout Chart:</strong><br>

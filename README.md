@@ -6,7 +6,7 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
 - Docker containerization
 - CI/CD pipelines using GitHub Actions and Jenkins
 
-## Features (v2.0.1)
+## Features
 
 * Persistent client and progress management using SQLite database
 * Save, load, and update client profiles (name, age, weight, program, notes)
@@ -16,14 +16,14 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
 * Export all client data as CSV
 * Visualize client adherence with a progress chart (from DB)
 * Add and display coach notes for each client
-* Reset form to clear input fields
+* Reset form to clear all input fields (robust: fields always reset to empty, even if previously set to None or missing)
 * Modern web-based UI (Flask, HTML/CSS)
 * All features fully tested and documented
 
-## Recent Updates (v2.1.2)
+## v2.2.1 Highlights
 
-- Added `/progress_chart.png` route to dynamically generate and serve the progress chart from the SQLite database using matplotlib.
-- Ensured all client and progress data is stored and retrieved using SQLite (persistent DB).
+- Robust reset form: All input fields are now guaranteed to be cleared after reset, regardless of previous state or missing values.
+- HTML form rendering improved: Uses `{{ variable or '' }}` for all input fields to ensure empty fields display correctly.
 
 ## Project Structure
 
@@ -66,7 +66,8 @@ Test coverage includes:
 - Client save and list
 - CSV export
 - Progress chart endpoint
-- Reset and notes features
+- Reset form (robust field clearing, regex-based test)
+   - Notes features
 
 
 ## Running Tests & Coverage
