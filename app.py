@@ -46,6 +46,7 @@ def init_db():
     ''')
     conn.commit()
 
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     selected = list(programs.keys())[0]
@@ -203,7 +204,8 @@ def progress_chart():
     conn = get_db()
     cur = conn.cursor()
     if client_name:
-        cur.execute('SELECT week, adherence FROM progress WHERE client_name=? ORDER BY week', (client_name,))
+        cur.execute('SELECT week, adherence FROM progress '
+                    'WHERE client_name=? ORDER BY week', (client_name,))
     else:
         cur.execute('SELECT week, adherence FROM progress ORDER BY week')
     data = cur.fetchall()
@@ -282,7 +284,6 @@ def calculate_calories(weight, program):
             return int(w * factor)
     except Exception:
         return None
-
 
 
 # Ensure DB tables exist before running app or tests
