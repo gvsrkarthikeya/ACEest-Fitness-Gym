@@ -45,6 +45,11 @@
                 <input type="text" name="notes" id="notes" value="{{ notes }}">
             </div>
             <button type="submit" name="save">Save Client</button>
+            <form method="post" action="/save_progress" style="display:inline;">
+                <input type="hidden" name="name" value="{{ name }}">
+                <input type="hidden" name="adherence" value="{{ adherence }}">
+                <button type="submit">Save Progress</button>
+            </form>
             <a href="/export"><button type="button">Export CSV</button></a>
             <button type="submit" name="reset">Reset</button>
         </form>
@@ -73,7 +78,12 @@
                 </tr>
                 {% for c in clients %}
                 <tr>
-                    <td>{{ c[0] }}</td><td>{{ c[1] }}</td><td>{{ c[2] }}</td><td>{{ c[3] }}</td><td>{{ c[4] }}</td><td>{{ c[5] }}</td>
+                    <td>{{ c['name'] }}</td>
+                    <td>{{ c['age'] }}</td>
+                    <td>{{ c['weight'] }}</td>
+                    <td>{{ c['program'] }}</td>
+                    <td>{{ c['adherence'] if c['adherence'] is not none else '' }}</td>
+                    <td>{{ c['notes'] if 'notes' in c else '' }}</td>
                 </tr>
                 {% endfor %}
             </table>
