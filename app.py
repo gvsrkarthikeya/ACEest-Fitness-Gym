@@ -1,16 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash
-from program_data import programs
+
 import io
 import csv
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from flask import Flask, render_template, request, redirect, url_for, send_file, flash
+from program_data import programs
+
+
 
 app = Flask(__name__)
 app.secret_key = 'aceest-secret-key'
 
 # In-memory client list
 clients = []
+
+
 
 def calculate_calories(weight, program):
     try:
@@ -19,6 +24,8 @@ def calculate_calories(weight, program):
             return int(w * programs[program]["calorie_factor"])
     except Exception:
         return None
+
+
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -64,6 +71,8 @@ def home():
         clients=clients
     )
 
+
+
 @app.route('/export')
 def export_csv():
     if not clients:
@@ -74,11 +83,18 @@ def export_csv():
     writer.writerow(["Name", "Age", "Weight", "Program", "Adherence", "Notes"])
     writer.writerows(clients)
     output.seek(0)
-    return send_file(io.BytesIO(output.getvalue().encode()), mimetype='text/csv', as_attachment=True, download_name='clients.csv')
+    return send_file(
+        io.BytesIO(output.getvalue().encode()),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='clients.csv'
+    )
+
+
 
 @app.route('/progress_chart.png')
 def progress_chart():
-    fig, ax = plt.subplots(figsize=(4,2))
+    fig, ax = plt.subplots(figsize=(4, 2))
     if clients:
         adherence = [float(c[4]) if c[4] else 0 for c in clients]
         names = [c[0] for c in clients]
@@ -93,6 +109,8 @@ def progress_chart():
     plt.close(fig)
     buf.seek(0)
     return send_file(buf, mimetype='image/png')
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
