@@ -1,7 +1,3 @@
-
-# ACEest Fitness & Gym
-
-
 # ACEest Fitness & Gym
 
 This is a modular Flask web application for ACEest Fitness & Gym, demonstrating DevOps best practices:
@@ -58,49 +54,12 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
    ```
 
 
-## Local Setup
-
-1. **Clone the repository:**
-   ```sh
-   git clone <repo-url>
-   cd ACEest-Fitness-Gym
-   ```
-2. **Install dependencies:**
-   ```sh
-   pip install -r requirements.txt
-   ```
-   (Installs Flask, matplotlib, pytest, and more)
-
-3. **Run the app locally:**
-   ```sh
-   python app.py
-   ```
-
-4. **Run with Docker:**
-   ```sh
-   docker build -t aceest-fitness-gym .
-   docker run -p 5000:5000 aceest-fitness-gym
-
-
-
-
-## Testing
-
-Run all tests with:
-```sh
-pytest
-```
-
 Test coverage includes:
 - Form input and calorie calculation
 - Client save and list
 - CSV export
 - Progress chart endpoint
 - Reset and notes features
-
-
-
-
 
 
 ## Running Tests & Coverage
