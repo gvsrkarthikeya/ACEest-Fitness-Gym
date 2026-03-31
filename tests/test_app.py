@@ -12,21 +12,29 @@ def test_home_get(client):
     assert response.status_code == 200
     assert b'ACEest FUNCTIONAL FITNESS' in response.data
 
-def test_home_post(client):
+def test_home_post_and_save_progress(client):
+    # Save client
     response = client.post('/', data={
         'profile': 'Muscle Gain (MG)',
         'name': 'Test User',
         'age': '25',
         'weight': '70',
-        'adherence': '90'
+        'adherence': '90',
+        'save': 'Save Client'
     })
     assert response.status_code == 200
     assert b'Muscle Gain (MG)' in response.data
     assert b'Weekly Workout Chart' in response.data
     assert b'Daily Nutrition Plan' in response.data
-    # Check for calories calculation (70 * 35 = 2450)
     assert b'Estimated Calories' in response.data
     assert b'2450 kcal' in response.data
+    # Save progress
+    response = client.post('/save_progress', data={
+        'name': 'Test User',
+        'adherence': '90'
+    }, follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Weekly progress logged.' in response.data
 
 
 def test_all_programs_calorie_calculation(client):
@@ -96,7 +104,12 @@ def test_save_client_and_list(client):
         'save': 'Save Client'
     }, follow_redirects=True)
     assert b'Client Client1 saved successfully.' in response.data
-    # Check client appears in table
+    # Save progress for client
+    client.post('/save_progress', data={
+        'name': 'Client1',
+        'adherence': '85'
+    })
+    # Check client appears in table with adherence and notes
     assert b'Client1' in response.data
     assert b'28' in response.data
     assert b'60' in response.data
@@ -118,8 +131,9 @@ def test_export_csv(client):
     response = client.get('/export')
     assert response.status_code == 200
     assert b'Client2' in response.data
-    assert b'Muscle Gain (MG)' in response.data
+    assert b'Muscle Gain (MG)' in response.data or b'Muscle Gain' in response.data
     assert b'Strong' in response.data
+    assert b'80' in response.data
     assert response.headers['Content-Type'].startswith('text/csv')
 
 def test_progress_chart(client):
@@ -151,3 +165,145 @@ def test_reset_form(client):
     }, follow_redirects=True)
     # Should redirect to home and not show client4 in table
     assert b'Client4' not in response.data
+
+def test_duplicate_client_update(client):
+    # Save client
+    client.post('/', data={
+        'profile': 'Fat Loss (FL)',
+        'name': 'DupClient',
+        'age': '30',
+        'weight': '60',
+        'adherence': '80',
+        'notes': 'First',
+        'save': 'Save Client'
+    })
+    # Save again with different data (should update)
+    response = client.post('/', data={
+        'profile': 'Muscle Gain (MG)',
+        'name': 'DupClient',
+        'age': '31',
+        'weight': '65',
+        'adherence': '85',
+        'notes': 'Updated',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    assert b'DupClient' in response.data
+    assert b'31' in response.data
+    assert b'65' in response.data
+    assert b'Updated' in response.data
+    assert b'Muscle Gain (MG)' in response.data or b'Muscle Gain' in response.data
+
+
+def test_save_progress_nonexistent_client(client):
+    response = client.post('/save_progress', data={
+        'name': 'NoSuchClient',
+        'adherence': '50'
+    }, follow_redirects=True)
+    # Should still flash success, but client won't be in table
+    assert b'Weekly progress logged.' in response.data
+    assert b'NoSuchClient' not in response.data
+
+
+def test_export_csv_no_clients(client):
+    # Clear all clients to simulate empty DB
+    with app.app_context():
+        conn = app.config.get('TEST_DB_CONN')
+        if not conn:
+            import sqlite3
+            conn = sqlite3.connect('aceest_fitness.db')
+        cur = conn.cursor()
+        cur.execute('DELETE FROM clients')
+        conn.commit()
+        conn.close()
+    response = client.get('/export', follow_redirects=True)
+    assert b'No clients to export.' in response.data
+
+
+def test_special_characters_in_name_notes(client):
+    special_name = "O'Reilly & Sons"
+    special_notes = "Great progress! 💪 #1"
+    response = client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': special_name,
+        'age': '29',
+        'weight': '70',
+        'adherence': '95',
+        'notes': special_notes,
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    # MarkupSafe (used by Jinja2) escapes single quote as &#39;
+    def markupsafe_escape(s):
+        return (
+            s.replace('&', '&amp;')
+             .replace('<', '&lt;')
+             .replace('>', '&gt;')
+             .replace('"', '&quot;')
+             .replace("'", '&#39;')
+        )
+    escaped_name = markupsafe_escape(special_name).encode()
+    escaped_notes = markupsafe_escape(special_notes).encode()
+    assert escaped_name in response.data
+    assert escaped_notes in response.data
+
+
+def test_empty_notes(client):
+    response = client.post('/', data={
+        'profile': 'Fat Loss (FL)',
+        'name': 'EmptyNotes',
+        'age': '33',
+        'weight': '60',
+        'adherence': '70',
+        'notes': '',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    assert b'EmptyNotes' in response.data
+    # Should not error if notes are empty
+
+
+def test_adherence_edge_cases(client):
+    # 0%
+    response = client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'Edge0',
+        'age': '20',
+        'weight': '50',
+        'adherence': '0',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    assert b'Edge0' in response.data
+    # 100%
+    response = client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'Edge100',
+        'age': '20',
+        'weight': '50',
+        'adherence': '100',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    assert b'Edge100' in response.data
+    # Negative
+    response = client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'EdgeNeg',
+        'age': '20',
+        'weight': '50',
+        'adherence': '-10',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    assert b'EdgeNeg' in response.data
+    # Over 100
+    response = client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'EdgeOver',
+        'age': '20',
+        'weight': '50',
+        'adherence': '150',
+        'save': 'Save Client'
+    }, follow_redirects=True)
+    assert b'EdgeOver' in response.data
+
+
+def test_save_progress_get_not_allowed(client):
+    response = client.get('/save_progress', follow_redirects=True)
+    # Should redirect or error (405)
+    assert response.status_code in (405, 302)

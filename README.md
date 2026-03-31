@@ -1,63 +1,34 @@
-
 # ACEest Fitness & Gym
 
-## Version 1.1.2
+This is a modular Flask web application for ACEest Fitness & Gym, demonstrating DevOps best practices:
+- Version control with Git
+- Automated testing with Pytest
+- Docker containerization
+- CI/CD pipelines using GitHub Actions and Jenkins
 
-### New in 1.1.2
-- Save and manage multiple client profiles
+## Features (v2.0.1)
+
+- Persistent client and progress management using SQLite database
+- Save, load, and update client profiles (name, age, weight, program, notes)
+- Track and save weekly adherence progress for each client
+- View all clients and their latest adherence in a table
 - Export all client data as CSV
-- Visualize client adherence with a progress chart
+- Visualize client adherence with a progress chart (from DB)
 - Add and display coach notes for each client
 - Reset form to clear input fields
 - All features fully tested and documented
 
-
-
-A Flask web app for ACEest Fitness & Gym, now supporting:
-- Personalized client profiles
-- Calorie estimation
-- Client list management (save multiple clients)
-- Export client data as CSV
-- Progress chart (adherence %)
-- Coach notes for each client
-
-Showcases DevOps best practices: version control, automated testing, Docker containerization, and CI/CD pipelines with GitHub Actions and Jenkins.
-
 ## Project Structure
 
-
-   - `app.py`: Main application file (Flask web app)
-   - `program_data.py`: Program logic and calorie factors
-   - `requirements.txt`: Python dependencies
-   - `tests/`: Unit tests
-   - `.gitignore`: Ignore unnecessary files
-   - `Dockerfile`: Containerization
-   - `.github/workflows/main.yml`: CI/CD pipeline
-   - `Jenkinsfile`: Jenkins pipeline definition
-   - `templates/`: HTML templates for Flask
-
-## Local Setup Instructions
-
-1. Clone the repository:
-
-   # ACEest Fitness & Gym
-
-   This is a modular Flask web application for ACEest Fitness & Gym, demonstrating DevOps best practices:
-   - Version control with Git
-   - Automated testing with Pytest
-   - Docker containerization
-   - CI/CD pipelines using GitHub Actions and Jenkins
-
-   ## Project Structure
-
-   - `app.py`: Main Flask application
-   - `program_data.py`: Supporting module for app logic
-   - `requirements.txt`: Python dependencies
-   - `tests/`: Unit tests (Pytest)
-   - `Dockerfile`: Containerization instructions
-   - `.github/workflows/main.yml`: GitHub Actions CI/CD pipeline
-   - `Jenkinsfile`: Jenkins pipeline definition
-   - `templates/`: HTML templates for Flask
+- `app.py`: Main Flask application
+- `program_data.py`: Supporting module for app logic
+- `requirements.txt`: Python dependencies
+- `tests/`: Unit tests (Pytest)
+- `Dockerfile`: Containerization instructions
+- `.github/workflows/main.yml`: GitHub Actions CI/CD pipeline
+- `Jenkinsfile`: Jenkins pipeline definition
+- `templates/`: HTML templates for Flask
+- `.gitignore`: Ignore unnecessary files
 
 
 ## Local Setup
@@ -72,49 +43,23 @@ Showcases DevOps best practices: version control, automated testing, Docker cont
    pip install -r requirements.txt
    ```
    (Installs Flask, matplotlib, pytest, and more)
-
 3. **Run the app locally:**
    ```sh
    python app.py
    ```
-
 4. **Run with Docker:**
    ```sh
    docker build -t aceest-fitness-gym .
    docker run -p 5000:5000 aceest-fitness-gym
-
-   ## Features (v1.1.2)
-
-   - Add and save multiple client profiles (name, age, weight, program, adherence, notes)
-   - Calorie calculation based on program and weight
-   - View all clients in a table
-   - Export all client data as CSV
-   - Visualize client adherence with a progress chart
-   - Add and display coach notes for each client
-   - Reset form to clear input fields
-
-   ## Testing
-
-   Run all tests with:
-   ```sh
-   pytest
-   ```
-
-   Test coverage includes:
-   - Form input and calorie calculation
-   - Client save and list
-   - CSV export
-   - Progress chart endpoint
-   - Reset and notes features
    ```
 
 
-## Features (v1.1)
-
-- Personalized client profile: Name, Age, Weight, Weekly Adherence
-- Program selection: Fat Loss, Muscle Gain, Beginner
-- Automatic calorie estimation based on weight and program
-- Weekly workout and nutrition plans
+Test coverage includes:
+- Form input and calorie calculation
+- Client save and list
+- CSV export
+- Progress chart endpoint
+- Reset and notes features
 
 
 ## Running Tests & Coverage
@@ -138,16 +83,15 @@ pytest --cov=. --cov-report=html
 # Open htmlcov/index.html in your browser
 ```
 
-   ## CI/CD Overview
 
-   - **GitHub Actions:**
-     - Triggers on push and pull requests
-     - Installs dependencies, lints, runs tests, and builds Docker image
-   - **Jenkins:**
-     - Uses the Jenkinsfile for pipeline definition
-     - Stages: install dependencies, lint, test, build Docker image
-     - Set up a Jenkins Pipeline job and point it to this repository
+## CI/CD Overview
 
-   ## Versioning
+- **GitHub Actions:**
+   - Triggers on push and pull requests
+   - Installs dependencies, lints, runs tests, and builds Docker image
+- **Jenkins:**
+   - Uses the Jenkinsfile for pipeline definition
+   - Stages: install dependencies, lint, test, build Docker image
+   - Set up a Jenkins Pipeline job and point it to this repository
 
    The app evolves from v1.0 to v3.2.4. Each version's code is placed in `app.py` as the project progresses.
