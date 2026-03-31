@@ -45,24 +45,6 @@ def init_db():
         )
     ''')
     conn.commit()
-    conn.close()
-
-
-init_db()
-
-
-def calculate_calories(weight, program):
-    try:
-        w = float(weight)
-        if w > 0:
-            factor = (
-                programs[program].get("factor") or
-                programs[program].get("calorie_factor")
-            )
-            return int(w * factor)
-    except Exception:
-        return None
-
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -74,6 +56,7 @@ def home():
     notes = ''
     calories = None
     summary = None
+    chart_client = ''
     load_name = request.args.get('load_name', '').strip()
     if load_name:
         conn = get_db()
@@ -96,7 +79,6 @@ Name     : {name}
 Age      : {age}
 Weight   : {weight} kg
 Program  : {selected}
-Calories : {calories} kcal/day
 Adherence: {adherence}
 Notes    : {notes}
 """
@@ -173,7 +155,14 @@ Notes    : {notes}
                     "warning"
                 )
         if 'reset' in request.form:
-            return redirect(url_for('home'))
+            # Reset all form fields to empty strings
+            name = ''
+            age = ''
+            weight = ''
+            adherence = ''
+            notes = ''
+            calories = None
+            # Continue to render the template with empty fields
     conn = get_db()
     cur = conn.cursor()
     cur.execute('''
@@ -203,22 +192,28 @@ Notes    : {notes}
         notes=notes,
         calories=calories,
         clients=clients,
-        summary=summary
+        summary=summary,
+        chart_client=chart_client or name
     )
 
 
 @app.route('/progress_chart.png')
 def progress_chart():
+    client_name = request.args.get('client')
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('SELECT week, adherence FROM progress ORDER BY week')
+    if client_name:
+        cur.execute('SELECT week, adherence FROM progress WHERE client_name=? ORDER BY week', (client_name,))
+    else:
+        cur.execute('SELECT week, adherence FROM progress ORDER BY week')
     data = cur.fetchall()
     conn.close()
     weeks = [row['week'] for row in data]
     adherence = [row['adherence'] for row in data]
     fig, ax = plt.subplots(figsize=(6, 3))
     ax.plot(weeks, adherence, marker='o', color='#d4af37')
-    ax.set_title('Weekly Adherence')
+    title = f"Weekly Adherence{' – ' + client_name if client_name else ''}"
+    ax.set_title(title)
     ax.set_xlabel('Week')
     ax.set_ylabel('Adherence (%)')
     ax.set_ylim(0, 100)
@@ -275,6 +270,23 @@ def export_csv():
         io.BytesIO(output.read().encode()), mimetype='text/csv',
         as_attachment=True, download_name='clients.csv')
 
+
+def calculate_calories(weight, program):
+    try:
+        w = float(weight)
+        if w > 0:
+            factor = (
+                programs[program].get("factor") or
+                programs[program].get("calorie_factor")
+            )
+            return int(w * factor)
+    except Exception:
+        return None
+
+
+
+# Ensure DB tables exist before running app or tests
+init_db()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
