@@ -19,6 +19,16 @@
         <div style="flex: 1; min-width: 260px;">
             <form method="post">
                 <div class="select">
+                                        <form method="post" action="/generate_ai_program" style="margin-bottom:8px;">
+                                            <input type="hidden" name="name" value="{{ name }}">
+                                            <label for="exp_level">Experience:</label>
+                                            <select name="exp_level" id="exp_level">
+                                                <option value="beginner">Beginner</option>
+                                                <option value="intermediate">Intermediate</option>
+                                                <option value="advanced">Advanced</option>
+                                            </select>
+                                            <button type="submit">Generate AI Program</button>
+                                        </form>
                     <label for="profile">Select Program:</label>
                     <select name="profile" id="profile">
                         {% for key in programs.keys() %}
@@ -55,6 +65,10 @@
                     <input type="number" name="adherence" id="adherence" min="0" max="100" value="{{ adherence or '' }}">
                 </div>
                 <div class="select">
+                    <label for="membership_expiry">Membership Expiry:</label>
+                    <input type="date" name="membership_expiry" id="membership_expiry" value="{{ membership_expiry or '' }}">
+                </div>
+                <div class="select">
                     <label for="notes">Coach Notes:</label>
                     <input type="text" name="notes" id="notes" value="{{ notes or '' }}">
                 </div>
@@ -65,6 +79,7 @@
                     <button type="submit">Save Progress</button>
                 </form>
                 <a href="/export"><button type="button">Export CSV</button></a>
+                                <a href="/export_pdf?name={{ name }}"><button type="button">Export PDF</button></a>
                 <button type="submit" name="reset">Reset</button>
                 <hr style="margin:16px 0;">
                 <!-- Analytics and Logging Controls -->
@@ -97,6 +112,24 @@
         <div style="flex: 2;">
             <!-- Dedicated Client Summary/Profile -->
             {% if summary %}
+                        {% for category, message in messages %}
+                            {% if category == 'ai_program' %}
+                                <div class="metrics" style="margin-bottom: 16px; background: #222;">
+                                    <strong>AI Generated Program for {{ message['client'] }}:</strong>
+                                    <table style="width:100%; background:#222; color:#fff; border-radius:5px;">
+                                        <tr><th>Day</th><th>Exercise</th><th>Sets</th><th>Reps</th></tr>
+                                        {% for row in message['ai_program'] %}
+                                        <tr>
+                                            <td>{{ row.day }}</td>
+                                            <td>{{ row.exercise }}</td>
+                                            <td>{{ row.sets }}</td>
+                                            <td>{{ row.reps }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
             <div class="metrics" style="margin-bottom: 16px; background: #222;">
                 <strong>Client Profile</strong><br>
                 <pre style="color:#d4af37; background: #111; border-radius: 5px; padding: 10px;">{{ summary }}</pre>
@@ -116,6 +149,7 @@
                 <table style="width:100%; background:#222; color:#fff; border-radius:5px;">
                     <tr>
                         <th>Name</th><th>Age</th><th>Weight</th><th>Program</th><th>Adherence</th><th>Notes</th>
+                        <th>Membership Expiry</th><th>Notes</th>
                     </tr>
                     {% for c in clients %}
                     <tr>
@@ -124,6 +158,7 @@
                         <td>{{ c['weight'] }}</td>
                         <td>{{ c['program'] }}</td>
                         <td>{{ c['adherence'] if c['adherence'] is not none else '' }}</td>
+                        <td>{{ c['membership_expiry'] if 'membership_expiry' in c else '' }}</td>
                         <td>{{ c['notes'] if 'notes' in c else '' }}</td>
                     </tr>
                     {% endfor %}

@@ -1,3 +1,4 @@
+import random
 import io
 import csv
 import sqlite3
@@ -8,12 +9,129 @@ from flask import (
 )
 from program_data import programs
 from datetime import datetime
+from fpdf import FPDF
+
 matplotlib.use('Agg')
 
 app = Flask(__name__)
 app.secret_key = 'aceest-secret-key'
 
 DB_NAME = 'aceest_fitness.db'
+
+
+# --- AI Program Generator Route ---
+@app.route('/generate_ai_program', methods=['POST'])
+def generate_ai_program():
+    name = request.form.get('name', '')
+    exp_level = request.form.get('exp_level', '').lower()
+    if not name or exp_level not in ['beginner', 'intermediate', 'advanced']:
+        flash('Client name and valid experience level required.', 'warning')
+        return redirect(url_for('home'))
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT program FROM clients WHERE name=?', (name,))
+    row = cur.fetchone()
+    if not row:
+        flash('Client not found.', 'warning')
+        conn.close()
+        return redirect(url_for('home'))
+    program_name = row['program']
+    exercises_pool = {
+        "Strength": [
+            "Squat", "Deadlift", "Bench Press",
+            "Overhead Press", "Pull-Up", "Barbell Row"
+        ],
+        "Hypertrophy": [
+            "Leg Press", "Incline Dumbbell Press",
+            "Lat Pulldown", "Lateral Raise", "Bicep Curl", "Tricep Extension"
+        ],
+        "Conditioning": [
+            "Running", "Cycling", "Rowing",
+            "Burpees", "Jump Rope", "Kettlebell Swings"
+        ],
+        "Full Body": [
+            "Push-Up", "Pull-Up", "Lunge",
+            "Plank", "Dumbbell Row", "Dumbbell Press"
+        ],
+    }
+    focus = "Full Body"
+    if "Fat Loss" in program_name:
+        focus = "Conditioning"
+    elif "Muscle Gain" in program_name:
+        focus = "Hypertrophy"
+    if exp_level == "beginner":
+        sets_range = (2, 3)
+        reps_range = (8, 12)
+        days = 3
+    elif exp_level == "intermediate":
+        sets_range = (3, 4)
+        reps_range = (8, 15)
+        days = 4
+    else:
+        sets_range = (4, 5)
+        reps_range = (6, 15)
+        days = 5
+    weekly_days = [
+        "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday"
+        ][:days]
+    ai_program = []
+    for day in weekly_days:
+        exercises = random.sample(exercises_pool[focus],
+                                  k=3 if days < 4 else 4)
+        for ex in exercises:
+            sets = random.randint(*sets_range)
+            reps = random.randint(*reps_range)
+            ai_program.append({
+                'day': day,
+                'exercise': ex,
+                'sets': sets,
+                'reps': reps
+            })
+    # Store in session or flash for display
+    flash({'ai_program': ai_program, 'client': name}, 'ai_program')
+    flash(f"AI program generated for {name}.", 'success')
+    conn.close()
+    return redirect(url_for('home'))
+
+
+# --- PDF Export Route ---
+@app.route('/export_pdf')
+def export_pdf():
+    name = request.args.get('name', '').strip()
+    if not name:
+        flash('Client name required for PDF export.', 'warning')
+        return redirect(url_for('home'))
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM clients WHERE name=?', (name,))
+    row = cur.fetchone()
+    conn.close()
+    if not row:
+        flash('Client not found.', 'warning')
+        return redirect(url_for('home'))
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, f"Client Report - {row['name']}", ln=True, align="C")
+    pdf.set_font("Arial", "", 12)
+    pdf.ln(10)
+    pdf.cell(0, 10, f"Name: {row['name']}", ln=True)
+    pdf.cell(0, 10, f"Age: {row['age']}", ln=True)
+    pdf.cell(0, 10, f"Height: {row['height']} cm", ln=True)
+    pdf.cell(0, 10, f"Weight: {row['weight']} kg", ln=True)
+    pdf.cell(0, 10, f"Program: {row['program']}", ln=True)
+    pdf.cell(0, 10, f"Membership Expiry: {row['membership_expiry']}", ln=True)
+    pdf.cell(0, 10, f"Notes: {row['notes']}", ln=True)
+    pdf_bytes = pdf.output(dest='S').encode('latin1')
+    pdf_output = io.BytesIO(pdf_bytes)
+    pdf_output.seek(0)
+    return send_file(
+        pdf_output,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f"{row['name']}_report.pdf"
+    )
 
 
 def get_db():
@@ -25,6 +143,21 @@ def get_db():
 def init_db():
     conn = get_db()
     cur = conn.cursor()
+    # Users table for authentication
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT,
+            role TEXT
+        )
+    ''')
+    # Default admin user
+    cur.execute('''
+        INSERT OR IGNORE INTO users (username, password, role)
+        VALUES ('admin', 'admin', 'Admin')
+    ''')
+    # Clients table with membership_expiry
     cur.execute('''
         CREATE TABLE IF NOT EXISTS clients (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,6 +169,7 @@ def init_db():
             calories INTEGER,
             target_weight REAL,
             target_adherence INTEGER,
+            membership_expiry TEXT,
             notes TEXT
         )
     ''')
@@ -97,6 +231,7 @@ def home():
     target_adherence = ''
     adherence = ''
     notes = ''
+    membership_expiry = ''
     calories = None
     summary = None
     chart_client = ''
@@ -109,22 +244,27 @@ def home():
         if row:
             (
                 _, name, age, height, weight, selected, calories,
-                target_weight, target_adherence, notes
+                target_weight, target_adherence, membership_expiry, notes
             ) = row
-            cur.execute('SELECT MAX(adherence) FROM'
-                        ' progress WHERE client_name=?', (name,))
+            cur.execute(
+                'SELECT MAX(adherence) FROM progress WHERE client_name=?',
+                (name,)
+            )
             adherence_row = cur.fetchone()
             adherence = (
                 adherence_row[0] if adherence_row and
                 adherence_row[0] is not None else ''
             )
-            # Compose summary (should be updated for new fields)
-            summary = f"""
-            Name: {name}\nAge: {age}\nHeight: {height}\nWeight: {weight}\n
-            Target Weight: {target_weight}\n
-            Target Adherence: {target_adherence}\nProgram: {selected}\n
-            Calories: {calories}\nNotes: {notes}"
-            """
+            # Compose summary (updated for new fields)
+            summary = (
+                f"Name: {name}\nAge: {age}\nHeight: {height}\n"
+                f"Weight: {weight}\n\n"
+                f"Target Weight: {target_weight}\n\n"
+                f"Target Adherence: {target_adherence}\n"
+                f"Program: {selected}\n\n"
+                f"Membership Expiry: {membership_expiry}\n\n"
+                f"Calories: {calories}\nNotes: {notes}"
+            )
         else:
             flash('Client not found.', 'warning')
         conn.close()
@@ -139,6 +279,7 @@ def home():
         target_adherence = request.form.get('target_adherence', '')
         adherence = request.form.get('adherence', '')
         notes = request.form.get('notes', '')
+        membership_expiry = request.form.get('membership_expiry', '')
         calories = calculate_calories(weight, selected)
         if 'save' in request.form:
             if name and selected:
@@ -150,12 +291,13 @@ def home():
                         INSERT OR REPLACE INTO clients
                         (name, age, height, weight,
                                 program, calories, target_weight,
-                                target_adherence, notes)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                target_adherence, membership_expiry, notes)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''',
                         (
                             name, age, height, weight, selected,
-                            calories, target_weight, target_adherence, notes
+                            calories, target_weight,
+                            target_adherence, membership_expiry, notes
                         )
                     )
                     conn.commit()
@@ -184,6 +326,7 @@ def home():
             target_adherence = ''
             adherence = ''
             notes = ''
+            membership_expiry = ''
             calories = None
             # Continue to render the template with empty fields
     conn = get_db()
@@ -191,6 +334,7 @@ def home():
     cur.execute('''
         SELECT clients.name, clients.age,
         clients.weight, clients.program,
+        clients.membership_expiry,
         p.adherence, clients.notes
         FROM clients
         LEFT JOIN (
@@ -216,6 +360,7 @@ def home():
         target_adherence=target_adherence,
         adherence=adherence,
         notes=notes,
+        membership_expiry=membership_expiry,
         calories=calories,
         clients=clients,
         summary=summary,
@@ -254,6 +399,7 @@ def progress_chart():
 
 
 @app.route('/save_progress', methods=['POST'])
+@app.route('/export_pdf')
 def save_progress():
     name = request.form.get('name', '')
     adherence = request.form.get('adherence', '')
@@ -294,8 +440,11 @@ def export_csv():
     conn.close()
     output.seek(0)
     return send_file(
-        io.BytesIO(output.read().encode()), mimetype='text/csv',
-        as_attachment=True, download_name='clients.csv')
+        io.BytesIO(output.read().encode()),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='clients.csv'
+    )
 
 
 @app.route('/weight_trend_chart.png')
