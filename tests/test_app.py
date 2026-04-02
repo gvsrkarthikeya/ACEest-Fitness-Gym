@@ -1,3 +1,97 @@
+
+def test_pdf_export_nonexistent_client(client):
+    response = client.get('/export_pdf?name=NoSuchUser', follow_redirects=True)
+    assert b'Client not found.' in response.data
+
+def test_generate_ai_program_invalid_client(client):
+    response = client.post('/generate_ai_program', data={
+        'name': 'NoSuchUser',
+        'exp_level': 'beginner'
+    }, follow_redirects=True)
+    assert b'Client not found.' in response.data
+
+def test_generate_ai_program_invalid_exp_level(client):
+    client.post('/', data={
+        'profile': 'Muscle Gain (MG)',
+        'name': 'AIUser2',
+        'age': '26',
+        'height': '180',
+        'weight': '80',
+        'adherence': '90',
+        'notes': 'AI test',
+        'save': 'Save Client'
+    })
+    response = client.post('/generate_ai_program', data={
+        'name': 'AIUser2',
+        'exp_level': 'invalidlevel'
+    }, follow_redirects=True)
+    assert b'Client name and valid experience level required.' in response.data
+
+def test_users_table_exists():
+    import sqlite3
+    conn = sqlite3.connect('aceest_fitness.db')
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+    assert cur.fetchone() is not None
+    cur.execute("SELECT * FROM users WHERE username='admin'")
+    row = cur.fetchone()
+    assert row is not None and row[1] == 'admin'
+    conn.close()
+
+def test_export_csv_special_characters(client):
+    special_name = 'CSV,User'
+    special_notes = 'Comma, newline\n and "quotes"'
+    client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': special_name,
+        'age': '29',
+        'weight': '70',
+        'adherence': '95',
+        'notes': special_notes,
+        'save': 'Save Client'
+    })
+    response = client.get('/export')
+    assert response.status_code == 200
+    assert b'CSV,User' in response.data
+    assert b'Comma, newline' in response.data
+def test_generate_ai_program(client):
+    # Save a client
+    client.post('/', data={
+        'profile': 'Muscle Gain (MG)',
+        'name': 'AIUser',
+        'age': '26',
+        'height': '180',
+        'weight': '80',
+        'adherence': '90',
+        'notes': 'AI test',
+        'save': 'Save Client'
+    })
+    # Generate AI program
+    response = client.post('/generate_ai_program', data={
+        'name': 'AIUser',
+        'exp_level': 'beginner'
+    }, follow_redirects=True)
+    assert response.status_code == 200
+    assert b'AI program generated for AIUser' in response.data or b'AI Generated Program' in response.data
+
+def test_export_pdf(client):
+    # Save a client
+    client.post('/', data={
+        'profile': 'Fat Loss (FL)',
+        'name': 'PDFUser',
+        'age': '29',
+        'height': '170',
+        'weight': '65',
+        'adherence': '85',
+        'notes': 'PDF test',
+        'membership_expiry': '2026-12-31',
+        'save': 'Save Client'
+    })
+    # Export PDF
+    response = client.get('/export_pdf?name=PDFUser')
+    assert response.status_code == 200
+    assert response.headers['Content-Type'] == 'application/pdf'
+    assert len(response.data) > 100
 def test_weight_trend_chart(client):
     # Save a client and some metrics
     client.post('/', data={

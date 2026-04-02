@@ -9,12 +9,15 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
 
 ## Features
 
+
 * Persistent client and progress management using SQLite database
-* Save, load, and update client profiles (name, age, height, weight, program, calories, target_weight, target_adherence, notes)
-* Load client by name and view full client summary/profile (includes goals, last metrics, progress summary)
+* Save, load, and update client profiles (name, age, height, weight, program, calories, target_weight, target_adherence, membership_expiry, notes)
+* User authentication (users table, login, roles)
+* AI-powered program generator (per-client, by experience level)
+* Export all client data as CSV or PDF (per-client report)
+* Load client by name and view full client summary/profile (includes goals, last metrics, progress summary, membership expiry)
 * Track and save weekly adherence progress for each client
 * View all clients and their latest adherence in a table
-* Export all client data as CSV
 * Visualize client adherence with a progress chart (from DB)
 * Visualize per-client weight trend chart (metrics over time)
 * View BMI and risk info per client
@@ -25,13 +28,13 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
 * Modern web-based UI (Flask, HTML/CSS)
 * All features fully tested and documented
 
-### v3.0.1 (Current)
-- New analytics: per-client weight trend, BMI, and adherence charts
-- New tables: workouts, exercises, metrics (body metrics logging)
-- Logging endpoints for workouts and metrics
-- Expanded client profile: height, target_weight, target_adherence
-- Improved UI/UX and robust form reset
-- All analytics and logging endpoints fully implemented and tested
+
+### v3.2.4 (Current)
+- User authentication (users table, login, roles)
+- Membership expiry field for clients
+- AI program generator (per-client, by experience level)
+- PDF export for client report
+- Expanded client profile: height, target_weight, target_adherence, membership_expiry
 
 ## Project Structure
 
@@ -69,12 +72,24 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
    ```
 
 
+
 Test coverage includes:
 - Progress chart endpoint
 - Weight trend chart endpoint
 - BMI info endpoint
-- Client save, update, and list (with new fields: height, target_weight, target_adherence)
+- Client save, update, and list (with new fields: height, target_weight, target_adherence, membership_expiry)
+- Membership expiry logic and UI
+- User authentication (users table, login, roles)
+- AI program generator (per-client, by experience level)
+- PDF export for client report
 - Workout, exercise, and metrics logging (CRUD, stubs)
+## New Features (v3.2.4)
+
+- **User Authentication:** Secure login and roles for admin/users.
+- **Membership Expiry:** Track and display membership expiry for each client.
+- **AI Program Generator:** Generate personalized workout plans by experience level.
+- **PDF Export:** Download a PDF report for any client.
+
 
 
 ## Running Tests & Coverage
