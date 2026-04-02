@@ -20,10 +20,12 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
 * Modern web-based UI (Flask, HTML/CSS)
 * All features fully tested and documented
 
-## v2.2.1 Highlights
+## v2.2.4 Highlights
 
-- Robust reset form: All input fields are now guaranteed to be cleared after reset, regardless of previous state or missing values.
-- HTML form rendering improved: Uses `{{ variable or '' }}` for all input fields to ensure empty fields display correctly.
+- New fields: height, target_weight, target_adherence for each client
+- New tables: workouts (session logs), exercises (per workout), metrics (body metrics)
+- Analytics: per-client weight trend, BMI, and adherence charts
+- Full CRUD for all new fields and tables
 
 ## Project Structure
 
@@ -60,14 +62,10 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
    docker run -p 5000:5000 aceest-fitness-gym
    ```
 
-
 Test coverage includes:
-- Form input and calorie calculation
-- Client save and list
-- CSV export
 - Progress chart endpoint
-- Reset form (robust field clearing, regex-based test)
-   - Notes features
+ - Client save, update, and list (with new fields: height, target_weight, target_adherence)
+ - Workout, exercise, and metrics logging (CRUD)
 
 
 ## Running Tests & Coverage

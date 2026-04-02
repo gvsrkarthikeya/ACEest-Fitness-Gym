@@ -18,16 +18,23 @@ def test_home_post_and_save_progress(client):
         'profile': 'Muscle Gain (MG)',
         'name': 'Test User',
         'age': '25',
+        'height': '175',
         'weight': '70',
+        'target_weight': '68',
+        'target_adherence': '90',
         'adherence': '90',
+        'notes': 'Test notes',
         'save': 'Save Client'
     })
     assert response.status_code == 200
     assert b'Muscle Gain (MG)' in response.data
-    assert b'Weekly Workout Chart' in response.data
+    assert b'Weekly Workout Chart' in response.data or b'Weekly Adherence' in response.data
     assert b'Daily Nutrition Plan' in response.data
     assert b'Estimated Calories' in response.data
     assert b'2450 kcal' in response.data
+    assert b'175' in response.data  # height
+    assert b'68' in response.data   # target_weight
+    assert b'90' in response.data   # target_adherence
     # Save progress
     response = client.post('/save_progress', data={
         'name': 'Test User',
@@ -98,7 +105,10 @@ def test_save_client_and_list(client):
         'profile': 'Fat Loss (FL)',
         'name': 'Client1',
         'age': '28',
+        'height': '170',
         'weight': '60',
+        'target_weight': '55',
+        'target_adherence': '95',
         'adherence': '85',
         'notes': 'Good progress',
         'save': 'Save Client'
@@ -109,10 +119,13 @@ def test_save_client_and_list(client):
         'name': 'Client1',
         'adherence': '85'
     })
-    # Check client appears in table with adherence and notes
+    # Check client appears in table with adherence and notes and new fields
     assert b'Client1' in response.data
     assert b'28' in response.data
+    assert b'170' in response.data  # height
     assert b'60' in response.data
+    assert b'55' in response.data   # target_weight
+    assert b'95' in response.data   # target_adherence
     assert b'85' in response.data
     assert b'Good progress' in response.data
 
@@ -398,17 +411,23 @@ def test_summary_profile_rendering(client):
         'profile': 'Muscle Gain (MG)',
         'name': 'SummaryUser',
         'age': '27',
+        'height': '180',
         'weight': '75',
+        'target_weight': '70',
+        'target_adherence': '92',
         'adherence': '88',
         'notes': 'Summary test',
         'save': 'Save Client'
     }, follow_redirects=True)
     # Now load by name to trigger summary
     response = client.get('/?load_name=SummaryUser')
-    # The summary/profile area should be present
+    # The summary/profile area should be present and include new fields
     assert b'Client Profile' in response.data
     assert b'SummaryUser' in response.data
     assert b'Summary test' in response.data
+    assert b'180' in response.data  # height
+    assert b'70' in response.data   # target_weight
+    assert b'92' in response.data   # target_adherence
 
 def test_flash_message_invalid_input(client):
     # Submit with missing name

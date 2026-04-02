@@ -39,6 +39,18 @@
                     <input type="number" step="0.1" name="weight" id="weight" value="{{ weight or '' }}">
                 </div>
                 <div class="select">
+                    <label for="height">Height (cm):</label>
+                    <input type="number" step="0.1" name="height" id="height" value="{{ height or '' }}">
+                </div>
+                <div class="select">
+                    <label for="target_weight">Target Weight (kg):</label>
+                    <input type="number" step="0.1" name="target_weight" id="target_weight" value="{{ target_weight or '' }}">
+                </div>
+                <div class="select">
+                    <label for="target_adherence">Target Adherence (%):</label>
+                    <input type="number" name="target_adherence" id="target_adherence" min="0" max="100" value="{{ target_adherence or '' }}">
+                </div>
+                <div class="select">
                     <label for="adherence">Weekly Adherence (%):</label>
                     <input type="number" name="adherence" id="adherence" min="0" max="100" value="{{ adherence or '' }}">
                 </div>
