@@ -30,9 +30,12 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE,
             age INTEGER,
+            height REAL,
             weight REAL,
             program TEXT,
             calories INTEGER,
+            target_weight REAL,
+            target_adherence INTEGER,
             notes TEXT
         )
     ''')
@@ -44,6 +47,42 @@ def init_db():
             adherence INTEGER
         )
     ''')
+
+    # Workouts (session-level)
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS workouts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_name TEXT,
+            date TEXT,
+            workout_type TEXT,
+            duration_min INTEGER,
+            notes TEXT
+        )
+    ''')
+
+    # Exercises (per workout)
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS exercises (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            workout_id INTEGER,
+            name TEXT,
+            sets INTEGER,
+            reps INTEGER,
+            weight REAL
+        )
+    ''')
+
+    # Body metrics (weight, waist, etc.)
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS metrics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_name TEXT,
+            date TEXT,
+            weight REAL,
+            waist REAL,
+            bodyfat REAL
+        )
+    ''')
     conn.commit()
 
 
@@ -52,7 +91,10 @@ def home():
     selected = list(programs.keys())[0]
     name = ''
     age = ''
+    height = ''
     weight = ''
+    target_weight = ''
+    target_adherence = ''
     adherence = ''
     notes = ''
     calories = None
@@ -65,33 +107,36 @@ def home():
         cur.execute('SELECT * FROM clients WHERE name=?', (load_name,))
         row = cur.fetchone()
         if row:
-            _, name, age, weight, selected, calories, notes = row
+            (
+                _, name, age, height, weight, selected, calories,
+                target_weight, target_adherence, notes
+            ) = row
             cur.execute('SELECT MAX(adherence) FROM'
                         ' progress WHERE client_name=?', (name,))
             adherence_row = cur.fetchone()
             adherence = (
                 adherence_row[0] if adherence_row and
                 adherence_row[0] is not None else ''
-                )
+            )
+            # Compose summary (should be updated for new fields)
             summary = f"""
-CLIENT PROFILE
---------------
-Name     : {name}
-Age      : {age}
-Weight   : {weight} kg
-Program  : {selected}
-Adherence: {adherence}
-Notes    : {notes}
-"""
-            # Save client if requested
+            Name: {name}\nAge: {age}\nHeight: {height}\nWeight: {weight}\n
+            Target Weight: {target_weight}\n
+            Target Adherence: {target_adherence}\nProgram: {selected}\n
+            Calories: {calories}\nNotes: {notes}"
+            """
         else:
             flash('Client not found.', 'warning')
         conn.close()
+    # Removed duplicate/erroneous POST block
     elif request.method == 'POST':
         selected = request.form.get('profile', selected)
         name = request.form.get('name', '')
         age = request.form.get('age', '')
+        height = request.form.get('height', '')
         weight = request.form.get('weight', '')
+        target_weight = request.form.get('target_weight', '')
+        target_adherence = request.form.get('target_adherence', '')
         adherence = request.form.get('adherence', '')
         notes = request.form.get('notes', '')
         calories = calculate_calories(weight, selected)
@@ -100,45 +145,19 @@ Notes    : {notes}
                 try:
                     conn = get_db()
                     cur = conn.cursor()
-                    cur.execute('''
+                    cur.execute(
+                        '''
                         INSERT OR REPLACE INTO clients
-                        (name, age, weight, program, calories, notes)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    ''', (name, age, weight, selected, calories, notes))
-                    conn.commit()
-                    conn.close()
-                    flash(
-                        f"Client {name} saved successfully.",
-                        "success"
+                        (name, age, height, weight,
+                                program, calories, target_weight,
+                                target_adherence, notes)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''',
+                        (
+                            name, age, height, weight, selected,
+                            calories, target_weight, target_adherence, notes
+                        )
                     )
-                except Exception as e:
-                    flash(
-                        f"DB Error: {e}",
-                        "danger"
-                    )
-            else:
-                flash(
-                    "Please fill client name and program.",
-                    "warning"
-                )
-    if request.method == 'POST':
-        selected = request.form.get('profile', selected)
-        name = request.form.get('name', '')
-        age = request.form.get('age', '')
-        weight = request.form.get('weight', '')
-        adherence = request.form.get('adherence', '')
-        notes = request.form.get('notes', '')
-        calories = calculate_calories(weight, selected)
-        if 'save' in request.form:
-            if name and selected:
-                try:
-                    conn = get_db()
-                    cur = conn.cursor()
-                    cur.execute('''
-                        INSERT OR REPLACE INTO clients
-                        (name, age, weight, program, calories, notes)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    ''', (name, age, weight, selected, calories, notes))
                     conn.commit()
                     conn.close()
                     flash(
@@ -159,7 +178,10 @@ Notes    : {notes}
             # Reset all form fields to empty strings
             name = ''
             age = ''
+            height = ''
             weight = ''
+            target_weight = ''
+            target_adherence = ''
             adherence = ''
             notes = ''
             calories = None
@@ -188,7 +210,10 @@ Notes    : {notes}
         color=data["color"],
         name=name,
         age=age,
+        height=height,
         weight=weight,
+        target_weight=target_weight,
+        target_adherence=target_adherence,
         adherence=adherence,
         notes=notes,
         calories=calories,
