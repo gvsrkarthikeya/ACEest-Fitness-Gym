@@ -121,7 +121,22 @@ def export_pdf():
     pdf.cell(0, 10, f"Height: {row['height']} cm", ln=True)
     pdf.cell(0, 10, f"Weight: {row['weight']} kg", ln=True)
     pdf.cell(0, 10, f"Program: {row['program']}", ln=True)
-    pdf.cell(0, 10, f"Membership Expiry: {row['membership_expiry']}", ln=True)
+    # Check membership status
+    today = datetime.now().date()
+    mem_end = None
+    if row['membership_end']:
+        try:
+            mem_end = datetime.strptime(
+                row['membership_end'], '%Y-%m-%d'
+                ).date()
+        except Exception:
+            mem_end = None
+    if mem_end:
+        membership_status = 'Active' if mem_end >= today else 'Expired'
+    else:
+        membership_status = 'Unknown'
+    pdf.cell(0, 10, f"Membership Status: {membership_status}", ln=True)
+    pdf.cell(0, 10, f"Membership End: {row['membership_end']}", ln=True)
     pdf.cell(0, 10, f"Notes: {row['notes']}", ln=True)
     pdf_bytes = pdf.output(dest='S').encode('latin1')
     pdf_output = io.BytesIO(pdf_bytes)
@@ -157,7 +172,7 @@ def init_db():
         INSERT OR IGNORE INTO users (username, password, role)
         VALUES ('admin', 'admin', 'Admin')
     ''')
-    # Clients table with membership_expiry
+    # Clients table with membership_status and membership_end
     cur.execute('''
         CREATE TABLE IF NOT EXISTS clients (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -169,7 +184,8 @@ def init_db():
             calories INTEGER,
             target_weight REAL,
             target_adherence INTEGER,
-            membership_expiry TEXT,
+            membership_status TEXT,
+            membership_end TEXT,
             notes TEXT
         )
     ''')
@@ -231,7 +247,8 @@ def home():
     target_adherence = ''
     adherence = ''
     notes = ''
-    membership_expiry = ''
+    membership_status = ''
+    membership_end = ''
     calories = None
     summary = None
     chart_client = ''
@@ -244,7 +261,8 @@ def home():
         if row:
             (
                 _, name, age, height, weight, selected, calories,
-                target_weight, target_adherence, membership_expiry, notes
+                target_weight, target_adherence,
+                membership_status, membership_end, notes
             ) = row
             cur.execute(
                 'SELECT MAX(adherence) FROM progress WHERE client_name=?',
@@ -255,14 +273,28 @@ def home():
                 adherence_row[0] if adherence_row and
                 adherence_row[0] is not None else ''
             )
-            # Compose summary (updated for new fields)
+            # Check membership status
+            today = datetime.now().date()
+            mem_end = None
+            if membership_end:
+                try:
+                    mem_end = datetime.strptime(
+                        membership_end, '%Y-%m-%d'
+                        ).date()
+                except Exception:
+                    mem_end = None
+            if mem_end:
+                membership_status = 'Active' if mem_end >= today else 'Expired'
+            else:
+                membership_status = 'Unknown'
             summary = (
                 f"Name: {name}\nAge: {age}\nHeight: {height}\n"
                 f"Weight: {weight}\n\n"
                 f"Target Weight: {target_weight}\n\n"
                 f"Target Adherence: {target_adherence}\n"
                 f"Program: {selected}\n\n"
-                f"Membership Expiry: {membership_expiry}\n\n"
+                f"Membership Status: {membership_status}\n"
+                f"Membership End: {membership_end}\n\n"
                 f"Calories: {calories}\nNotes: {notes}"
             )
         else:
@@ -279,7 +311,19 @@ def home():
         target_adherence = request.form.get('target_adherence', '')
         adherence = request.form.get('adherence', '')
         notes = request.form.get('notes', '')
-        membership_expiry = request.form.get('membership_expiry', '')
+        membership_end = request.form.get('membership_end', '')
+        # Check membership status
+        today = datetime.now().date()
+        mem_end = None
+        if membership_end:
+            try:
+                mem_end = datetime.strptime(membership_end, '%Y-%m-%d').date()
+            except Exception:
+                mem_end = None
+        if mem_end:
+            membership_status = 'Active' if mem_end >= today else 'Expired'
+        else:
+            membership_status = 'Unknown'
         calories = calculate_calories(weight, selected)
         if 'save' in request.form:
             if name and selected:
@@ -291,13 +335,15 @@ def home():
                         INSERT OR REPLACE INTO clients
                         (name, age, height, weight,
                                 program, calories, target_weight,
-                                target_adherence, membership_expiry, notes)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                target_adherence, membership_status,
+                                membership_end, notes)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''',
                         (
                             name, age, height, weight, selected,
                             calories, target_weight,
-                            target_adherence, membership_expiry, notes
+                            target_adherence, membership_status,
+                            membership_end, notes
                         )
                     )
                     conn.commit()
@@ -326,7 +372,8 @@ def home():
             target_adherence = ''
             adherence = ''
             notes = ''
-            membership_expiry = ''
+            membership_status = ''
+            membership_end = ''
             calories = None
             # Continue to render the template with empty fields
     conn = get_db()
@@ -334,7 +381,7 @@ def home():
     cur.execute('''
         SELECT clients.name, clients.age,
         clients.weight, clients.program,
-        clients.membership_expiry,
+        clients.membership_status, clients.membership_end,
         p.adherence, clients.notes
         FROM clients
         LEFT JOIN (
@@ -342,7 +389,20 @@ def home():
             adherence FROM progress GROUP BY client_name
         ) p ON clients.name = p.client_name
     ''')
-    clients = cur.fetchall()
+    clients = [dict(row) for row in cur.fetchall()]
+    today = datetime.now().date()
+    for c in clients:
+        mem_end = c.get('membership_end')
+        if mem_end:
+            try:
+                mem_end_date = datetime.strptime(mem_end, '%Y-%m-%d').date()
+                c['membership_status'] = (
+                    'Active' if mem_end_date >= today else 'Expired'
+                    )
+            except Exception:
+                c['membership_status'] = 'Unknown'
+        else:
+            c['membership_status'] = 'Unknown'
     conn.close()
     data = programs[selected]
     return render_template(
@@ -360,7 +420,8 @@ def home():
         target_adherence=target_adherence,
         adherence=adherence,
         notes=notes,
-        membership_expiry=membership_expiry,
+        membership_status=membership_status,
+        membership_end=membership_end,
         calories=calories,
         clients=clients,
         summary=summary,
