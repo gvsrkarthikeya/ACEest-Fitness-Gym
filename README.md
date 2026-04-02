@@ -6,26 +6,32 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
 - Docker containerization
 - CI/CD pipelines using GitHub Actions and Jenkins
 
+
 ## Features
 
 * Persistent client and progress management using SQLite database
-* Save, load, and update client profiles (name, age, weight, program, notes)
-* Load client by name and view full client summary/profile
+* Save, load, and update client profiles (name, age, height, weight, program, calories, target_weight, target_adherence, notes)
+* Load client by name and view full client summary/profile (includes goals, last metrics, progress summary)
 * Track and save weekly adherence progress for each client
 * View all clients and their latest adherence in a table
 * Export all client data as CSV
 * Visualize client adherence with a progress chart (from DB)
+* Visualize per-client weight trend chart (metrics over time)
+* View BMI and risk info per client
 * Add and display coach notes for each client
+* Log and view workouts and exercises (workouts, exercises tables)
+* Log and view body metrics (weight, waist, bodyfat; metrics table)
 * Reset form to clear all input fields (robust: fields always reset to empty, even if previously set to None or missing)
 * Modern web-based UI (Flask, HTML/CSS)
 * All features fully tested and documented
 
-## v2.2.4 Highlights
-
-- New fields: height, target_weight, target_adherence for each client
-- New tables: workouts (session logs), exercises (per workout), metrics (body metrics)
-- Analytics: per-client weight trend, BMI, and adherence charts
-- Full CRUD for all new fields and tables
+### v3.0.1 (Current)
+- New analytics: per-client weight trend, BMI, and adherence charts
+- New tables: workouts, exercises, metrics (body metrics logging)
+- Logging endpoints for workouts and metrics
+- Expanded client profile: height, target_weight, target_adherence
+- Improved UI/UX and robust form reset
+- All analytics and logging endpoints fully implemented and tested
 
 ## Project Structure
 
@@ -62,10 +68,13 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
    docker run -p 5000:5000 aceest-fitness-gym
    ```
 
+
 Test coverage includes:
 - Progress chart endpoint
- - Client save, update, and list (with new fields: height, target_weight, target_adherence)
- - Workout, exercise, and metrics logging (CRUD)
+- Weight trend chart endpoint
+- BMI info endpoint
+- Client save, update, and list (with new fields: height, target_weight, target_adherence)
+- Workout, exercise, and metrics logging (CRUD, stubs)
 
 
 ## Running Tests & Coverage

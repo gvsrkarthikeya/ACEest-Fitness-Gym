@@ -66,6 +66,25 @@
                 </form>
                 <a href="/export"><button type="button">Export CSV</button></a>
                 <button type="submit" name="reset">Reset</button>
+                <hr style="margin:16px 0;">
+                <!-- Analytics and Logging Controls -->
+                {% if name %}
+                <div class="select">
+                    <a href="/progress_chart.png?client={{ name }}" target="_blank"><button type="button">Adherence Chart</button></a>
+                    <a href="/weight_trend_chart.png?client={{ name }}" target="_blank"><button type="button">Weight Trend Chart</button></a>
+                    <a href="/bmi_info?client={{ name }}" target="_blank"><button type="button">BMI Info</button></a>
+                </div>
+                <div class="select">
+                    <form method="post" action="/log_workout" style="display:inline;">
+                        <input type="hidden" name="name" value="{{ name }}">
+                        <button type="submit">Log Workout</button>
+                    </form>
+                    <form method="post" action="/log_metrics" style="display:inline;">
+                        <input type="hidden" name="name" value="{{ name }}">
+                        <button type="submit">Log Body Metrics</button>
+                    </form>
+                </div>
+                {% endif %}
             </form>
             <!-- Load Client by Name -->
             <form method="get" action="/" style="margin-top: 16px;">

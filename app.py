@@ -298,6 +298,127 @@ def export_csv():
         as_attachment=True, download_name='clients.csv')
 
 
+@app.route('/weight_trend_chart.png')
+def weight_trend_chart():
+    client_name = request.args.get('client')
+    conn = get_db()
+    cur = conn.cursor()
+    if not client_name:
+        flash('Client name required for weight trend chart.', 'warning')
+        return redirect(url_for('home'))
+    cur.execute(
+        'SELECT date, weight FROM metrics WHERE client_name=? AND '
+        'weight IS NOT NULL ORDER BY date',
+        (client_name,)
+    )
+    data = cur.fetchall()
+    conn.close()
+    if not data:
+        flash('No weight metrics available for this client.', 'warning')
+        return redirect(url_for('home'))
+    dates = [row['date'] for row in data]
+    weights = [row['weight'] for row in data]
+    fig, ax = plt.subplots(figsize=(6, 3))
+    ax.plot(dates, weights, marker='o', color='orange')
+    title = f"Weight Trend – {client_name}"
+    ax.set_title(title)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Weight (kg)')
+    ax.grid(True)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    plt.close(fig)
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
+
+
+@app.route('/bmi_info')
+def bmi_info():
+    client_name = request.args.get('client')
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        'SELECT height, weight FROM clients WHERE name=?',
+        (client_name,)
+    )
+    row = cur.fetchone()
+    conn.close()
+    if not row or not row['height'] or not row['weight']:
+        return {
+            'bmi': None,
+            'category': None,
+            'risk': 'Missing height or weight.'
+        }
+    height = row['height']
+    weight = row['weight']
+    h_m = height / 100.0
+    bmi = weight / (h_m * h_m)
+    bmi = round(bmi, 1)
+    if bmi < 18.5:
+        category = 'Underweight'
+        risk = 'Potential nutrient deficiency, low energy.'
+    elif bmi < 25:
+        category = 'Normal'
+        risk = 'Low risk if active and strong.'
+    elif bmi < 30:
+        category = 'Overweight'
+        risk = (
+            'Moderate risk; focus on adherence and progressive activity.'
+        )
+    else:
+        category = 'Obese'
+        risk = (
+            'Higher risk; prioritize fat loss, consistency, and supervision.'
+        )
+    return {
+        'bmi': bmi,
+        'category': category,
+        'risk': risk
+    }
+
+
+# Stubs for workout and metrics logging
+# endpoints (to be implemented in next step)
+@app.route('/log_workout', methods=['POST'])
+def log_workout():
+
+    # TODO: Implement workout logging (session + exercise)
+    return {'status': 'not implemented'}
+
+
+@app.route('/log_metrics', methods=['POST'])
+def log_metrics():
+
+    name = request.form.get('name')
+    date_val = request.form.get('date')
+    weight = request.form.get('weight')
+    waist = request.form.get('waist')
+    bodyfat = request.form.get('bodyfat')
+    if not name or not date_val:
+        return {
+            'status': 'error',
+            'message': 'Missing name or date'
+        }, 400
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'INSERT INTO metrics (client_name, date, weight, waist, bodyfat) '
+            'VALUES (?, ?, ?, ?, ?)',
+            (name, date_val, weight, waist, bodyfat)
+        )
+        conn.commit()
+        conn.close()
+        return {'status': 'ok'}
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': str(e)
+        }, 500
+
+
 def calculate_calories(weight, program):
     try:
         w = float(weight)
