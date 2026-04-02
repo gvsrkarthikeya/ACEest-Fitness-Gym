@@ -11,11 +11,11 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
 
 
 * Persistent client and progress management using SQLite database
-* Save, load, and update client profiles (name, age, height, weight, program, calories, target_weight, target_adherence, membership_expiry, notes)
+* Save, load, and update client profiles (name, age, height, weight, program, calories, target_weight, target_adherence, membership_status, membership_end, notes)
 * User authentication (users table, login, roles)
 * AI-powered program generator (per-client, by experience level)
 * Export all client data as CSV or PDF (per-client report)
-* Load client by name and view full client summary/profile (includes goals, last metrics, progress summary, membership expiry)
+* Load client by name and view full client summary/profile (includes goals, last metrics, progress summary, membership status and end date)
 * Track and save weekly adherence progress for each client
 * View all clients and their latest adherence in a table
 * Visualize client adherence with a progress chart (from DB)
@@ -30,11 +30,8 @@ This is a modular Flask web application for ACEest Fitness & Gym, demonstrating 
 
 
 ### v3.2.4 (Current)
-- User authentication (users table, login, roles)
-- Membership expiry field for clients
-- AI program generator (per-client, by experience level)
-- PDF export for client report
-- Expanded client profile: height, target_weight, target_adherence, membership_expiry
+- Expanded client profile: height, target_weight, target_adherence, membership_status, membership_end
+- Membership status and end date fields for clients (status is automatically calculated as Active/Expired based on end date)
 
 ## Project Structure
 
@@ -77,16 +74,17 @@ Test coverage includes:
 - Progress chart endpoint
 - Weight trend chart endpoint
 - BMI info endpoint
-- Client save, update, and list (with new fields: height, target_weight, target_adherence, membership_expiry)
-- Membership expiry logic and UI
+- Client save, update, and list (with new fields: height, target_weight, target_adherence, membership_status, membership_end)
+- Membership status and end date logic and UI
 - User authentication (users table, login, roles)
 - AI program generator (per-client, by experience level)
 - PDF export for client report
 - Workout, exercise, and metrics logging (CRUD, stubs)
+
 ## New Features (v3.2.4)
 
 - **User Authentication:** Secure login and roles for admin/users.
-- **Membership Expiry:** Track and display membership expiry for each client.
+- **Membership Status & End Date:** Track and display membership status (Active/Expired) and end date for each client. Status is automatically calculated based on the end date.
 - **AI Program Generator:** Generate personalized workout plans by experience level.
 - **PDF Export:** Download a PDF report for any client.
 

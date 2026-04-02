@@ -65,8 +65,8 @@
                     <input type="number" name="adherence" id="adherence" min="0" max="100" value="{{ adherence or '' }}">
                 </div>
                 <div class="select">
-                    <label for="membership_expiry">Membership Expiry:</label>
-                    <input type="date" name="membership_expiry" id="membership_expiry" value="{{ membership_expiry or '' }}">
+                    <label for="membership_end">Membership End:</label>
+                    <input type="date" name="membership_end" id="membership_end" value="{{ membership_end or '' }}">
                 </div>
                 <div class="select">
                     <label for="notes">Coach Notes:</label>
@@ -148,8 +148,7 @@
                 <strong>Client List:</strong>
                 <table style="width:100%; background:#222; color:#fff; border-radius:5px;">
                     <tr>
-                        <th>Name</th><th>Age</th><th>Weight</th><th>Program</th><th>Adherence</th><th>Notes</th>
-                        <th>Membership Expiry</th><th>Notes</th>
+                        <th>Name</th><th>Age</th><th>Weight</th><th>Program</th><th>Adherence</th><th>Membership Status</th><th>Membership End</th><th>Notes</th>
                     </tr>
                     {% for c in clients %}
                     <tr>
@@ -158,7 +157,8 @@
                         <td>{{ c['weight'] }}</td>
                         <td>{{ c['program'] }}</td>
                         <td>{{ c['adherence'] if c['adherence'] is not none else '' }}</td>
-                        <td>{{ c['membership_expiry'] if 'membership_expiry' in c else '' }}</td>
+                        <td>{{ c['membership_status'] }}</td>
+                        <td>{{ c['membership_end'] if 'membership_end' in c else '' }}</td>
                         <td>{{ c['notes'] if 'notes' in c else '' }}</td>
                     </tr>
                     {% endfor %}

@@ -84,7 +84,7 @@ def test_export_pdf(client):
         'weight': '65',
         'adherence': '85',
         'notes': 'PDF test',
-        'membership_expiry': '2026-12-31',
+        'membership_end': '2026-12-31',
         'save': 'Save Client'
     })
     # Export PDF
