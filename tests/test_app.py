@@ -1,3 +1,86 @@
+def test_weight_trend_chart(client):
+    # Save a client and some metrics
+    client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'WeightChartUser',
+        'age': '25',
+        'height': '170',
+        'weight': '70',
+        'adherence': '80',
+        'notes': 'For weight chart',
+        'save': 'Save Client'
+    })
+    # Log two metrics
+    client.post('/log_metrics', data={
+        'name': 'WeightChartUser',
+        'date': '2024-01-01',
+        'weight': '70',
+        'waist': '80',
+        'bodyfat': '15'
+    })
+    client.post('/log_metrics', data={
+        'name': 'WeightChartUser',
+        'date': '2024-02-01',
+        'weight': '68',
+        'waist': '78',
+        'bodyfat': '14'
+    })
+    # Request chart
+    response = client.get('/weight_trend_chart.png?client=WeightChartUser')
+    assert response.status_code == 200
+    assert response.headers['Content-Type'] == 'image/png'
+    assert len(response.data) > 100
+
+def test_bmi_info(client):
+    client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'BMIUser',
+        'age': '30',
+        'height': '180',
+        'weight': '80',
+        'adherence': '90',
+        'notes': 'For BMI',
+        'save': 'Save Client'
+    })
+    response = client.get('/bmi_info?client=BMIUser')
+    assert response.status_code == 200
+    assert b'bmi' in response.data or b'BMI' in response.data
+
+def test_log_workout_and_metrics(client):
+    client.post('/', data={
+        'profile': 'Beginner (BG)',
+        'name': 'LogUser',
+        'age': '22',
+        'height': '165',
+        'weight': '60',
+        'adherence': '75',
+        'notes': 'For logging',
+        'save': 'Save Client'
+    })
+    # Log workout (stub, should return not implemented)
+    response = client.post('/log_workout', data={
+        'name': 'LogUser',
+        'date': '2024-03-01',
+        'workout_type': 'Strength',
+        'duration_min': '60',
+        'notes': 'Test workout',
+        'exercise_name': 'Bench Press',
+        'sets': '3',
+        'reps': '10',
+        'weight': '60'
+    })
+    assert response.status_code == 200
+    assert b'not implemented' in response.data
+    # Log metrics (now implemented, should return status ok)
+    response = client.post('/log_metrics', data={
+        'name': 'LogUser',
+        'date': '2024-03-01',
+        'weight': '60',
+        'waist': '80',
+        'bodyfat': '15'
+    })
+    assert response.status_code == 200
+    assert b'"status":"ok"' in response.data or b'\'status\': \'ok\'' in response.data
 import pytest
 from app import app
 
