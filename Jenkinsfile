@@ -7,6 +7,13 @@ pipeline {
     }
 
     stages {
+        stage('Set Docker Tag') {
+            steps {
+                script {
+                    env.DOCKER_TAG = env.BRANCH_NAME.replaceAll('/', '-')
+                }
+            }
+        }
 
         stage('Install dependencies') {
             steps {
@@ -29,7 +36,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                docker build -t ${DOCKER_IMAGE}:latest .
+                docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
                 '''
             }
         }
@@ -46,7 +53,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 sh '''
-                docker push ${DOCKER_IMAGE}:${BRANCH_NAME}
+                docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                 '''
             }
         }
